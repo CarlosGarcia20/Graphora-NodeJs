@@ -5,7 +5,7 @@ import morgan from 'morgan'
 import { PORT } from './config.js'
 
 //Rutas 
-import { usersRouter } from './routes/user.js'
+import { usersRouter } from './routes/user.routes.js'
 
 // Middlewares
 import { corsMiddleware } from './middlewares/cors.js'
