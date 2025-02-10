@@ -1,8 +1,10 @@
 import pool from "../config/db.js";
+import { EncryptionHelper } from '../helpers/encryption.helper.js'
 
 export class UserModel {
     static async createUser ({ email, password, rememberMe }) {
         try {
+            const hashedPassword = await EncryptionHelper.hashPassword(password);
 
             const { rows } = await pool.query(`
                 INSERT INTO usuarios (email, password, rememberme)
@@ -11,7 +13,7 @@ export class UserModel {
                 `,
                 [
                     email, 
-                    password,
+                    hashedPassword,
                     rememberMe
                 ]
             );
@@ -38,6 +40,16 @@ export class UserModel {
     
         } catch (error) {
             // console.error("Error al eliminar: ", error);
+            return { success: false, error };
+        }
+    }
+
+    static async getAllUsers() {
+        try {
+            const { rows } = await pool.query("SELECT * FROM usuarios");
+
+            return { success: true, data: rows };
+        } catch (error) {
             return { success: false, error };
         }
     }
