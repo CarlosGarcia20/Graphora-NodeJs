@@ -5,6 +5,13 @@ export class UserModel {
     static async createUser ({ input }) {
         try {
             const { email, password, name, lastName } = input;
+            
+            // Validacion para verificar si el email ya existe en la base de datos
+            const { rows: user } = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+
+            if (user.length > 0) {
+                return { success: false, error: "El email ya se encuentra registrado" };
+            }
 
             const hashedPassword = await EncryptionHelper.hashPassword(password);
 
@@ -21,9 +28,9 @@ export class UserModel {
                 ]
             );
 
-            return { success: true, data: rows[0] };
+            return { success: true };
         } catch (error) {
-            return { success: false, error };
+            return { success: false, error: error.message };
         }
     }
 
