@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 import { EncryptionHelper } from "../helpers/encryption.helper.js";
 
 export class loginModel {
-    static async login({ input }) {
+    static async login({ email, password, rememberMe }) {
         try {
             const { email, password } = input;
            

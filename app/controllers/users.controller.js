@@ -4,6 +4,7 @@ import { validateRegister } from "../schemas/register.js";
 export class userController {
     static async create(req, res) {
         try {
+<<<<<<< HEAD
             const resultado = validateRegister(req.body);
 
             if (!resultado.success) {
@@ -11,6 +12,11 @@ export class userController {
             }
 
             const result = await UserModel.createUser({ input: resultado.data });
+=======
+            const { name, lastName, email, password, rememberMe } = req.body;
+
+            const result = await UserModel.createUser({ name, lastName, email, password, rememberMe });
+>>>>>>> master
             
             if (!result.success) {
                 return res.status(500).json({ message: result.error });

@@ -1,8 +1,13 @@
 import cors from 'cors'
 
 const ACCEPTED_ORIGINS = [
+<<<<<<< HEAD
     'http://localhost:4200/',
     'http://localhost:4200'
+=======
+    'http://localhost:4200',
+    'http://localhost:4200/'
+>>>>>>> master
 ]
 
 export const corsMiddleware = ({ acceptedOrigins = ACCEPTED_ORIGINS } = {}) => cors({
