@@ -56,7 +56,7 @@ export class UserModel {
 
     static async getAllUsers() {
         try {
-            const { rows } = await pool.query("SELECT * FROM usuarios");
+            const { rows } = await pool.query("SELECT * FROM users");
 
             return { success: true, data: rows };
         } catch (error) {

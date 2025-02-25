@@ -33,7 +33,7 @@ export class loginController {
             refreshTokens.push(refreshToken);
             
             console.log(result);
-            return res.status(200).json({ message: "Inicio de sesión exitoso", accessToken, refreshToken, data });
+            return res.status(200).json({ message: "Inicio de sesión exitoso", accessToken, refreshToken });
 
         } catch (error) {
             return res.status(500).json({ message: "Internal Server Error", error: error.message });
