@@ -3,10 +3,10 @@ import { UserModel } from "../models/users.models.js";
 export class userController {
     static async create(req, res) {
         try {
-            const { email, password, rememberMe } = req.body;
+            const { name, lastName, email, password, rememberMe } = req.body;
 
-            const result = await UserModel.createUser({ email, password, rememberMe });
-
+            const result = await UserModel.createUser({ name, lastName, email, password, rememberMe });
+            
             if (!result.success) {
                 return res.status(500).json({ message: result.error.message });
             }

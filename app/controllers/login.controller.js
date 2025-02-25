@@ -24,6 +24,11 @@ export class loginController {
             refreshTokens.push(refreshToken);
             
             return res.status(200).json({ message: "Inicio de sesión exitoso", accessToken, refreshToken, data });
+            console.log(result);
+
+            const data = (({ iduser, email, name, lastname }) => ({ iduser, email, name, lastname }))(result);
+            
+            return res.status(200).json({ message: "Inicio de sesión exitoso", data: data })
         } catch (error) {
             return res.status(500).json({ message: "Internal Server Error", error: error.message });
         }
