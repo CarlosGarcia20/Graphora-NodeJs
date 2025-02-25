@@ -16,3 +16,4 @@ pool.connect()
     .catch(err => console.error("❌ Error de conexión a Neon:", err));
 
 export default pool;
+
