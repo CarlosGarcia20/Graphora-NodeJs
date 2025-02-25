@@ -9,7 +9,7 @@ export class loginController {
     static async login(req, res) {
         try {
             console.log("Entro");
-            const { email, password, rememberMe } = req.body;
+            const { email, password } = req.body;
             const result = await loginModel.login({ email, password, rememberMe });
 
             if (!result.success) {
@@ -23,12 +23,12 @@ export class loginController {
             const refreshToken = jwt.sign(data, config.jwtRefreshSecret, { expiresIn: config.jwtRefreshExpiresIn });
             refreshTokens.push(refreshToken);
             
-            return res.status(200).json({ message: "Inicio de sesión exitoso", accessToken, refreshToken, data });
             console.log(result);
+            return res.status(200).json({ message: "Inicio de sesión exitoso", accessToken, refreshToken, data });
 
-            const data = (({ iduser, email, name, lastname }) => ({ iduser, email, name, lastname }))(result);
+            // const data = (({ iduser, email, name, lastname }) => ({ iduser, email, name, lastname }))(result);
             
-            return res.status(200).json({ message: "Inicio de sesión exitoso", data: data })
+            // return res.status(200).json({ message: "Inicio de sesión exitoso", data: data })
         } catch (error) {
             return res.status(500).json({ message: "Internal Server Error", error: error.message });
         }
