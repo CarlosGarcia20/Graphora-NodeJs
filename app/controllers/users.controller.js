@@ -1,11 +1,16 @@
 import { UserModel } from "../models/users.models.js";
+import { validateRegister } from "../schemas/register.js";
 
 export class userController {
     static async create(req, res) {
         try {
-            const { email, password, rememberMe } = req.body;
+            const resultado = validateRegister(req.body);
 
-            const result = await UserModel.createUser({ email, password, rememberMe });
+            if (!resultado.success) {
+                return res.status(400).json({ message: JSON.parse(resultado.error.message) });
+            }
+
+            const result = await UserModel.createUser({ input: resultado.data });
 
             if (!result.success) {
                 return res.status(500).json({ message: result.error.message });

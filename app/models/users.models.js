@@ -2,19 +2,22 @@ import pool from "../config/db.js";
 import { EncryptionHelper } from '../helpers/encryption.helper.js'
 
 export class UserModel {
-    static async createUser ({ email, password, rememberMe }) {
+    static async createUser ({ input }) {
         try {
+            const { email, password, name, lastName } = input;
+
             const hashedPassword = await EncryptionHelper.hashPassword(password);
 
             const { rows } = await pool.query(`
-                INSERT INTO usuarios (email, password, rememberme)
-                VALUES ($1, $2, $3) 
+                INSERT INTO users (email, password, name, lastname)
+                VALUES ($1, $2, $3, $4)
                 RETURNING *
                 `,
                 [
                     email, 
                     hashedPassword,
-                    rememberMe
+                    name,
+                    lastName
                 ]
             );
 
