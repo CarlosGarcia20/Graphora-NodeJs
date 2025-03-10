@@ -14,7 +14,7 @@ export class UserModel {
                 RETURNING *
                 `,
                 [
-                    email, 
+                    email,
                     hashedPassword,
                     name,
                     lastName

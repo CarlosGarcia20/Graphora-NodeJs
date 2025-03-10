@@ -11,7 +11,7 @@ export class userController {
             }
 
             const result = await UserModel.createUser({ input: resultado.data });
-
+            
             if (!result.success) {
                 return res.status(500).json({ message: result.error.message });
             }
