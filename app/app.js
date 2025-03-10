@@ -9,7 +9,7 @@ import { usersRouter } from './routes/user.routes.js'
 
 // Middlewares
 import { corsMiddleware } from './middlewares/cors.js'
-import { loginRouter } from './routes/login.routes.js'
+import { loginRouter } from './routes/auth.routes.js'
 
 const app = express()
 

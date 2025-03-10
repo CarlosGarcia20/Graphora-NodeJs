@@ -1,4 +1,4 @@
-import { loginModel } from "../models/login.models.js";
+import { loginModel } from "../models/auth.models.js";
 import { validateLogin } from "../schemas/login.js";
 import jwt from 'jsonwebtoken';
 import config from '../config.js';
@@ -20,10 +20,13 @@ export class loginController {
                 return res.status(500).json({ message: result.message });
             }
 
-            const data = (({ iduser, email, name, lastname }) => ({ iduser, email, name, lastname }))(result);
-            
+            const { iduser, email, name, lastname } = result.data;
+            const data = { iduser, email, name, lastname };
+
             const accessToken = jwt.sign(data, config.jwtSecret, { expiresIn: config.jwtExpiresIn });
             const refreshToken = jwt.sign(data, config.jwtRefreshSecret, { expiresIn: config.jwtRefreshExpiresIn });
+
+            // Guardar refresh token
             refreshTokens.push(refreshToken);
             
             return res.status(200).json({ message: "Inicio de sesión exitoso", accessToken, refreshToken, data });
