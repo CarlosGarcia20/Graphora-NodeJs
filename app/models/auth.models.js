@@ -21,8 +21,11 @@ export class loginModel {
                 return { success: false, message: "Contraseña incorrecta" }
             }
 
-            return { success: true, data: rows[0] }
+            const { password: _, ...userData } = rows[0];
+
+            return { success: true, data: userData }
         } catch (error) {
+            console.log(error)
             return { success: false, error };
         }
     }
