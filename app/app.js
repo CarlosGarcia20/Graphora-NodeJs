@@ -2,7 +2,7 @@ import express from 'express'
 import morgan from 'morgan'
 
 // Archivos de configuracion
-import { PORT } from './config.js'
+import { PORT } from './config/config.js'
 
 //Rutas 
 import { usersRouter } from './routes/user.routes.js'
@@ -19,7 +19,7 @@ app.use(corsMiddleware())
 
 app.disable('x-powered-by')
 
-app.use('/login', loginRouter)
+app.use('/auth', loginRouter)
 app.use('/users', usersRouter)
 
 app.listen(PORT, () => {
