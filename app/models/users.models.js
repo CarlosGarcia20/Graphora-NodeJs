@@ -70,4 +70,22 @@ export class UserModel {
             return { success: false, error };
         }
     }
+
+    static async getUserById({ userId }) {
+        try {
+            const { rows } = await pool.query(`
+                SELECT * FROM users
+                WHERE userid = $1`
+                [userId]
+            );
+
+            if (rows.length === 0) {
+                return { success: false };
+            }
+
+            return { success: true, data: rows[0] };
+        } catch (error) {
+            return { success: false, error };
+        }
+    }
 }

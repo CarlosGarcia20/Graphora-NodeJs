@@ -8,4 +8,6 @@ usersRouter.post('/', userController.create);
 
 usersRouter.get('/', verifyToken ,userController.getUsers);
 
-usersRouter.delete('/:idUser', userController.deleteUser);
+usersRouter.get('/:userId', userController.getUserById);
+
+usersRouter.delete('/:idUser', verifyToken, userController.deleteUser);

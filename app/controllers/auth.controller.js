@@ -30,7 +30,6 @@ export class loginController {
                 accessToken, 
                 refreshToken, 
                 user: {
-                    userId: userId,
                     name: name,
                     lastname: lastname,
                     email: email
@@ -56,11 +55,20 @@ export class loginController {
 
     static async refreshToken(req, res) {
         const { refreshToken: oldRefreshToken } = req.body;
-        const userId = req.user.iduser;
+        const userId = req.user.userId; // Obtener el userId del token decodificado
+
+        if (!userId) {
+            return res.status(403).json({ 
+              code: 'USER_NOT_FOUND', 
+              message: 'No se identificó al usuario' 
+            });
+        }
         
         try {
             // Generar nuevos tokens
-            const { accessToken, refreshToken: newRefreshToken } = tokenService.generateTokens({ userData: userId})
+            const { accessToken, refreshToken: newRefreshToken } = tokenService.generateTokens({
+                userId: userId,
+            })
 
             // Rotar el refresh token
             await tokenService.removeRefreshToken(oldRefreshToken)
@@ -69,6 +77,7 @@ export class loginController {
             // Regresar la respuesta
             res.json({ accessToken, refreshToken: newRefreshToken })
         } catch (error) {
+            console.log(error)
             res.status(500).json({ code: 'Internal Server Error', message: 'Error al renovar token' });
         }
     }

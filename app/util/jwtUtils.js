@@ -7,7 +7,7 @@ export class tokenService {
     static generateTokens(userData) {
         const accessToken = jwt.sign(
             {
-                iduser: userData.userId
+                userId: userData.userId
             }, 
             config.jwtSecret, { 
                 expiresIn: config.jwtExpiresIn 
@@ -16,7 +16,7 @@ export class tokenService {
 
         const refreshToken = jwt.sign(
             {
-                iduser: userData.iduser
+                userId: userData.userId
             },
             config.jwtRefreshSecret, { 
                 expiresIn: config.jwtRefreshExpiresIn 
@@ -29,7 +29,7 @@ export class tokenService {
     static async storeRefreshToken(userId, token) {
         // Guardar el token de actualización en la base de datos o en la memoria
         await pool.query(`
-            INSERT INTO refresh_tokens (token, userid, expiresAt)
+            INSERT INTO refresh_tokens (token, userid, expiresat)
             VALUES ($1, $2, NOW() + INTERVAL '${config.jwtRefreshExpiresIn}')`,
             [
                 token,
@@ -39,18 +39,28 @@ export class tokenService {
     }
     
     static async removeRefreshToken(token) {
-        await pool.query(`
-            DELETE FROM refresh_tokens WHERE token = $1`,
+        const { rows } = await pool.query(`
+            DELETE FROM refresh_tokens WHERE token = $1 RETURNING *`,
             [ token ]
         );
+
+        return rows[0]
     }
 
     static async isValidRefreshToken(token) {
-        const result = await pool.query(`
-            SELECT 1 FROM refresh_tokens 
+        const { rows } = await pool.query(`
+            SELECT * FROM refresh_tokens 
             WHERE token = $1 AND expiresat > NOW()`,
-            [ token ]
+            [ 
+                token 
+            ]
         );
-        return result.rows[0];
+
+        if (rows.length === 0) {
+            return false;
+        }
+
+        return rows[0]
+       
     }
 }

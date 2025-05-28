@@ -5,7 +5,6 @@ import { tokenService } from '../util/jwtUtils.js';
 export const verifyToken = (req, res, next) => {
 	// obtener el token del header 'Authorization'
 	const token = req.headers.authorization?.split(' ')[1]
-	console.log(req.headers.authorization)
 	
 	if (!token) {
 		return res.status(401).json({
@@ -60,9 +59,15 @@ export const verifyRefreshToken = async(req, res, next) => {
 		
 	} catch (error) {
 		if (error.name === 'TokenExpiredError') {
-			return res.status(401).json({ code: 'TOKEN_EXPIRED', message: 'Refresh token expirado' });
+			return res.status(401).json({ 
+				code: 'TOKEN_EXPIRED', 
+				message: 'Refresh token expirado' 
+			});
 		}
 
-		res.status(403).json({ code: 'TOKEN_INVALID', message: 'Token corrupto' });
+		res.status(403).json({ 
+			code: 'TOKEN_INVALID', 
+			message: 'Token corrupto' 
+		});
 	}
 }

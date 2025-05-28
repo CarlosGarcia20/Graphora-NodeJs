@@ -50,4 +50,23 @@ export class userController {
             return res.status(500).json({ message: "Error interno", error: error.message });
         }
     }
+
+    static async getUserById(req, res) {
+        try {
+            const { userId } = req.params;
+            const result = await UserModel.getUserById({ userId });
+
+            if (!result.success) {
+                return res.status(404).json({ message: "Usuario no encontrado" });
+            }
+
+            const { email, name, lastname } = result.data;
+
+            return res.status(200).json({
+                user: { email, name, lastname } 
+            });
+        } catch (error) {
+            return res.status(500).json({ message: "Error interno", error: error.message });
+        }
+    }
 }
