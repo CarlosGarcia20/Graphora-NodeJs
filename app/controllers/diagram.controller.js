@@ -125,4 +125,108 @@ export class DiagramController {
             })
         }
     }
+
+    // Diagramas del usuario
+    static async getMyDiagrams(req, res) {
+        try {
+            const userId = req.user.userId
+            const result = await DiagramModel.getDiagramsByUser({ userId })
+
+            if (!result.success) {
+                return res.status(400).json({
+                    message: result.error
+                })
+            }
+            
+            return res.status(200).json({ diagrams: result.data })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Error al obtener los diagramas",
+                error: error.message
+            })
+        }
+    }
+    
+    static async getMyDiagramById(req, res) {
+        try {
+            const userId = req.user.userId
+            const { diagramId } = req.params
+            
+            const result = await DiagramModel.getDiagramInfo({ userId, diagramId })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({ diagram: result.data })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Error al obtener los diagramas",
+                error: error.message
+            })
+        }
+    }
+
+    static async softDeleteDiagram(req, res) {
+        try {
+            const userId = req.user.userId
+            const { diagramId } = req.params
+
+            const result = await DiagramModel.softDeleteDiagram({ userId, diagramId })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({ message: "Diagrama eliminado correctamente" })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Error al obtener los diagramas",
+                error: error.message
+            })
+        }
+    }
+
+    static async restoreDiagram(req, res) {
+        try {
+            const userId = req.user.userId
+            const { diagramId } = req.params
+
+            const result = await DiagramModel.restoreDiagram({ userId, diagramId })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({ 
+                message: "Diagrama restaurado correctamente",
+                data: result.data 
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Error al obtener los diagramas",
+                error: error.message
+            })
+        }
+    }
+
+    static async deleteDiagram(req, res) {
+        try {
+            const userId = req.user.userId
+            const { diagramId } = req.params
+
+            const result = await DiagramModel.deleteDiagram({ userId, diagramId })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({ message: "Diagrama eliminado correctamente" })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Error al obtener los diagramas",
+                error: error.message
+            })
+        }
+    }
 }

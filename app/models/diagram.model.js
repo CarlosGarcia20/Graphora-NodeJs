@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { DiagramStatus } from "../constants/diagramStatus.js";
 
 export class DiagramModel {
     static async getTemplates() {
@@ -132,4 +133,150 @@ export class DiagramModel {
             return { success: false, error: error.message };
         }
     }
+
+    // Diagramas del usuario
+    static async getDiagramsByUser({ userId }) {
+        try {
+            const { rows, rowCount } = await pool.query(
+                `SELECT id, name, description, template_data, created_at
+                FROM user_diagrams 
+                WHERE user_id = $1 AND status = $2
+                ORDER BY created_at DESC`,
+                [ userId, DiagramStatus.ACTIVE ]
+            )
+    
+            if (rowCount < 1) {
+                return { success: false, error: "No se encontraron diagramas" }
+            }
+    
+            return { success: true, data: rows }    
+        } catch (error) {
+            return { success: false, error: error.message }
+        }
+    }
+    
+    static async getDiagramInfo({ userId, diagramId }) {
+        try {
+            const { rows, rowCount } = await pool.query(
+                `SELECT template_data
+                FROM user_diagrams
+                WHERE id = $1 AND user_id = $2 AND status = $3`,
+                [ 
+                    diagramId, 
+                    userId,
+                    DiagramStatus.ACTIVE
+                ]
+            )
+
+            if (rowCount < 1) {
+                return { success: false, error: "No se encontró el diagrama" }
+            }
+
+            return { success: true, data: rows[0] }
+        } catch (error) {
+            return { success: false, error: error.message }
+        }
+    }
+
+    static async softDeleteDiagram({ userId, diagramId }) {
+        try {
+            const { rowCount } = await pool.query(`
+                UPDATE user_diagrams
+                SET status = $1, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $2 AND user_id = $3 AND status = $4`, 
+                [
+                    DiagramStatus.DELETED,
+                    diagramId,
+                    userId,
+                    DiagramStatus.ACTIVE
+                ]
+            );
+
+            if (rowCount < 1) {
+                return { success: false, error: "Diagrama no encontrado o ya eliminado" }
+            }
+
+            return { success: true }
+        } catch (error) {
+            return { success: false, error: error.message }
+        }
+    }
+
+    static async restoreDiagram({ userId, diagramId }) {
+        try {
+            const { rowCount: existing } = await pool.query(
+                `SELECT id FROM user_diagrams 
+                WHERE id = $1 AND user_id = $2 AND status = $3`,
+                [
+                    diagramId, 
+                    userId, 
+                    DiagramStatus.DELETED
+                ]
+            );
+
+            if (existing < 1) {
+                return { success: false, error: "Diagrama no encontrado o no ha sido enviado a la papelera" };
+            }
+
+            const { rowCount: updating } = await pool.query(
+                `UPDATE user_diagrams
+                SET status = $1, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $2 AND user_id = $3`,
+                [ 
+                    DiagramStatus.ACTIVE,
+                    diagramId, 
+                    userId 
+                ]
+            )
+
+            if (updating < 1) {
+                return { success: false, error: "Error al recuperar el diagrama" }
+            }
+
+            const { rows: updatedRows } = await pool.query(
+                `SELECT id, name, description, template_data, created_at 
+                FROM user_diagrams 
+                WHERE id = $1 AND user_id = $2`,
+                [ diagramId, userId ]
+            );
+
+            return { success: true, data: updatedRows[0] }
+        } catch (error) {
+            return { success: false, error: error.message }
+        }
+    }
+
+    static async deleteDiagram({ userId, diagramId }) {
+        try {
+            const { rows, rowCount } = await pool.query(
+                `SELECT status 
+                FROM user_diagrams 
+                WHERE id = $1 AND user_id = $2`,
+                [diagramId, userId]
+            );
+
+            if (rowCount < 1) {
+                return { success: false, error: "Diagrama no encontrado" };
+            }
+
+            if (rows[0].status !== DiagramStatus.DELETED) {
+                return { success: false, error: "Primero debes enviar el diagrama a la papelera" };
+            }
+
+            const { rowCount: deleted } = await pool.query(
+                `DELETE FROM user_diagrams 
+                WHERE id = $1 AND user_id = $2`,
+                [ diagramId, userId ]
+            );
+
+            if (deleted < 1) {
+                return { success: false, error: "No se pudo eliminar el diagrama" };
+            }
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
 }
