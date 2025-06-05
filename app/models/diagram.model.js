@@ -138,7 +138,7 @@ export class DiagramModel {
     static async getDiagramsByUser({ userId }) {
         try {
             const { rows, rowCount } = await pool.query(
-                `SELECT id, name, description, template_data, created_at
+                `SELECT template_id, name, description, template_data, created_at
                 FROM user_diagrams 
                 WHERE user_id = $1 AND status = $2
                 ORDER BY created_at DESC`,
@@ -158,9 +158,9 @@ export class DiagramModel {
     static async getDiagramInfo({ userId, diagramId }) {
         try {
             const { rows, rowCount } = await pool.query(
-                `SELECT template_data
+                `SELECT template_id, name, description, template_data, created_at, updated_at
                 FROM user_diagrams
-                WHERE id = $1 AND user_id = $2 AND status = $3`,
+                WHERE template_id = $1 AND user_id = $2 AND status = $3`,
                 [ 
                     diagramId, 
                     userId,
@@ -183,7 +183,7 @@ export class DiagramModel {
             const { rowCount } = await pool.query(`
                 UPDATE user_diagrams
                 SET status = $1, updated_at = CURRENT_TIMESTAMP
-                WHERE id = $2 AND user_id = $3 AND status = $4`, 
+                WHERE template_id = $2 AND user_id = $3 AND status = $4`, 
                 [
                     DiagramStatus.DELETED,
                     diagramId,
@@ -205,8 +205,8 @@ export class DiagramModel {
     static async restoreDiagram({ userId, diagramId }) {
         try {
             const { rowCount: existing } = await pool.query(
-                `SELECT id FROM user_diagrams 
-                WHERE id = $1 AND user_id = $2 AND status = $3`,
+                `SELECT template_id FROM user_diagrams 
+                WHERE template_id = $1 AND user_id = $2 AND status = $3`,
                 [
                     diagramId, 
                     userId, 
@@ -221,7 +221,7 @@ export class DiagramModel {
             const { rowCount: updating } = await pool.query(
                 `UPDATE user_diagrams
                 SET status = $1, updated_at = CURRENT_TIMESTAMP
-                WHERE id = $2 AND user_id = $3`,
+                WHERE template_id = $2 AND user_id = $3`,
                 [ 
                     DiagramStatus.ACTIVE,
                     diagramId, 
@@ -234,9 +234,9 @@ export class DiagramModel {
             }
 
             const { rows: updatedRows } = await pool.query(
-                `SELECT id, name, description, template_data, created_at 
+                `SELECT template_id, name, description, template_data, created_at 
                 FROM user_diagrams 
-                WHERE id = $1 AND user_id = $2`,
+                WHERE template_id = $1 AND user_id = $2`,
                 [ diagramId, userId ]
             );
 
@@ -251,7 +251,7 @@ export class DiagramModel {
             const { rows, rowCount } = await pool.query(
                 `SELECT status 
                 FROM user_diagrams 
-                WHERE id = $1 AND user_id = $2`,
+                WHERE template_id = $1 AND user_id = $2`,
                 [diagramId, userId]
             );
 
@@ -265,7 +265,7 @@ export class DiagramModel {
 
             const { rowCount: deleted } = await pool.query(
                 `DELETE FROM user_diagrams 
-                WHERE id = $1 AND user_id = $2`,
+                WHERE template_id = $1 AND user_id = $2`,
                 [ diagramId, userId ]
             );
 
