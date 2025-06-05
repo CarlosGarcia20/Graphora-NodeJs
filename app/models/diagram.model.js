@@ -321,8 +321,8 @@ export class DiagramModel {
         try {
             // Verificar si el diagrama existe
             const { rowCount: exists } = await pool.query(
-                `SELECT id FROM user_diagrams 
-                WHERE id = $1 AND user_id = $2 AND status = $3`,
+                `SELECT template_id FROM user_diagrams 
+                WHERE template_id = $1 AND user_id = $2 AND status = $3`,
                 [diagramId, userId, DiagramStatus.ACTIVE]
             );
 
@@ -333,7 +333,7 @@ export class DiagramModel {
             const { rowCount } = await pool.query(
                 `UPDATE user_diagrams 
                 SET name = $1, description = $2, template_data = $3, updated_at = CURRENT_TIMESTAMP
-                WHERE id = $4 AND user_id = $5`,
+                WHERE template_id = $4 AND user_id = $5`,
                 [
                     input.name,
                     input.description || null,
