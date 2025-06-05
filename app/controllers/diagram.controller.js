@@ -1,4 +1,5 @@
 import { DiagramModel } from "../models/diagram.model.js";
+import { validateCreateDiagram } from "../schemas/createDiagram.schema.js";
 import { validateTemplate } from "../schemas/template.js";
 import { validateUpdateTemplate } from "../schemas/updateTemplate.js";
 
@@ -227,6 +228,75 @@ export class DiagramController {
                 message: "Error al obtener los diagramas",
                 error: error.message
             })
+        }
+    }
+
+    static async createDiagramUser(req, res) {
+        try {
+            const validation = validateCreateDiagram(req.body);
+
+            if (!validation.success) {
+                return res.status(400).json({ 
+                    message: JSON.parse(validation.error.message)
+                });
+            }
+
+            const userId = req.user.userId
+
+            const result = await DiagramModel.createDiagramUser({
+                userId,
+                input: validation.data
+            });
+
+            if (!result.success) {
+                return res.status(400).json({
+                    message: result.error || "Error al guardar el diagrama"
+                })
+            }
+
+            return res.status(201).json({
+                message: "Diagrama guardado exitosamente"
+            })
+        } catch (error) {
+            return res.status(500).json({ 
+                message: "Internal Server Error", 
+                error: error.message 
+            });
+        }
+    }
+
+    static async updateDiagramUser(req, res) {
+        try {
+            const validation = validateCreateDiagram(req.body);
+
+            if (!validation.success) {
+                return res.status(400).json({ 
+                    message: JSON.parse(validation.error.message)
+                });
+            }
+
+            const userId = req.user.userId
+
+            const result = await DiagramModel.updateDiagramUser({
+                userId,
+                diagramId: req.params.diagramId,
+                input: validation.data
+            })
+
+            if (!result.success) {
+                return res.status(404).json({ 
+                    message: result.error || "Error al actualizar el diagrama" 
+                });
+            }
+            
+            return res.status(200).json({ 
+                message: "Diagrama actualizado correctamente" 
+            });
+        } catch (error) {
+            return res.status(500).json({ 
+                message: "Internal Server Error", 
+                error: error.message 
+            });
         }
     }
 }

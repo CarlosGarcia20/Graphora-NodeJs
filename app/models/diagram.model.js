@@ -279,4 +279,77 @@ export class DiagramModel {
         }
     }
 
+    static async createDiagramUser({ userId, input }) {
+        try {
+            // Validar si ya existe un diagrama con el mismo nombre
+            const { rows: existing } = await pool.query(
+                `SELECT name FROM user_diagrams 
+                WHERE user_id = $1 AND name = $2 AND status = $3`,
+                [userId, input.name, DiagramStatus.ACTIVE]
+            );
+
+            if (existing.length > 0) {
+                return {
+                    success: false,
+                    error: "El nombre del diagrama ya se encuentra registrado"
+                }
+            }
+
+            const { rowCount } = await pool.query(
+                `INSERT INTO user_diagrams(name, description, user_id, template_data, status) 
+                VALUES ($1, $2, $3, $4, $5)`,
+                [
+                    input.name,
+                    input.description || null,
+                    userId,
+                    input.template_data,
+                    DiagramStatus.ACTIVE
+                ]
+            )
+
+            if (rowCount < 1) {
+                return { success: false, error: "No se pudo guardar el diagrama" }
+            }
+            
+            return { success: true }
+        } catch (error) {
+            return { success: false, error: error.message }
+        }
+    }
+
+    static async updateDiagramUser({ userId, diagramId, input }) {
+        try {
+            // Verificar si el diagrama existe
+            const { rowCount: exists } = await pool.query(
+                `SELECT id FROM user_diagrams 
+                WHERE id = $1 AND user_id = $2 AND status = $3`,
+                [diagramId, userId, DiagramStatus.ACTIVE]
+            );
+
+            if (exists < 1) {
+                return { success: false, error: "Diagrama no encontrado" };
+            }
+
+            const { rowCount } = await pool.query(
+                `UPDATE user_diagrams 
+                SET name = $1, description = $2, template_data = $3, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $4 AND user_id = $5`,
+                [
+                    input.name,
+                    input.description || null,
+                    input.template_data,
+                    diagramId,
+                    userId
+                ]
+            );
+
+            if (rowCount < 1) {
+                return { success: false, error: "No se pudo actualizar el diagrama" };
+            }
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
 }

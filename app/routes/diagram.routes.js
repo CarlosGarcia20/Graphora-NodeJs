@@ -25,3 +25,7 @@ diagramsRouter.patch('/me/delete/:diagramId', verifyToken, DiagramController.sof
 diagramsRouter.patch('/me/restore/:diagramId', verifyToken, DiagramController.restoreDiagram)
 
 diagramsRouter.delete('/me/:diagramId', verifyToken, DiagramController.deleteDiagram)
+
+diagramsRouter.post('/me', verifyToken, DiagramController.createDiagramUser)
+
+diagramsRouter.put('/me/:diagramId', verifyToken, DiagramController.updateDiagramUser)
