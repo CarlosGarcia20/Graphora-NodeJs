@@ -42,7 +42,10 @@ export class userController {
             const result = await UserModel.getAllUsers();
 
             if (!result.success) {
-                return res.status(500).json({ message: "Error al obtener usuarios" });
+                return res.status(500).json({ 
+                    message: "Error al obtener usuarios",
+                    error: result.error
+                });
             }
 
             return res.status(200).json({ users: result.data });

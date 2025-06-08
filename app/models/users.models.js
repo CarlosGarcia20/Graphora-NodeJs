@@ -67,7 +67,7 @@ export class UserModel {
 
             return { success: true, data: rows };
         } catch (error) {
-            return { success: false, error };
+            return { success: false, error: error.message };
         }
     }
 
