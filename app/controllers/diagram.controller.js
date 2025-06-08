@@ -299,4 +299,48 @@ export class DiagramController {
             });
         }
     }
+
+    static async setFavoriteStatus(req, res) {
+        try {
+            const userId = req.user.userId
+            const { diagramId } = req.params
+            const input = req.body
+
+            const result = await DiagramModel.setFavoriteStatus({ userId, diagramId, input })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({ 
+                message: input.is_favorite ? "Diagrama marcado como favorito" : "Diagrama removido de favoritos"
+            })
+        } catch (error) {
+            return res.status(500).json({ 
+                message: "Internal Server Error", 
+                error: error.message 
+            })
+        }
+    }
+    
+    static async getUserFavoriteDiagrams(req, res) {
+        try {
+            const userId = req.user.userId
+
+            const result = await DiagramModel.getUserFavoriteDiagrams({ userId })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({
+                data: result.data
+            })
+        } catch (error) {
+            return res.status(500).json({ 
+                messageeee: "Internal Server Error", 
+                error: error.message 
+            })
+        }
+    }
 }

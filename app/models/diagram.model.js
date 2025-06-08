@@ -352,4 +352,64 @@ export class DiagramModel {
             return { success: false, error: error.message };
         }
     }
+
+    static async setFavoriteStatus({ userId, diagramId, input }) {
+        try {
+            const { rowCount: exists } = await pool.query(
+                `SELECT template_id FROM user_diagrams
+                WHERE template_id = $1 AND user_id = $2 AND status = $3`,
+                [
+                    diagramId,
+                    userId,
+                    DiagramStatus.ACTIVE
+                ]
+            )
+
+            if (exists < 1) {
+                return { success: false, error: "Diagrama no encontrado o eliminado" }
+            }
+
+            const { rowCount } = await pool.query(
+                `UPDATE user_diagrams 
+                SET is_favorite = $1, updated_at = CURRENT_TIMESTAMP
+                WHERE template_id = $2 AND user_id = $3`,
+                [
+                    input.is_favorite,
+                    diagramId,
+                    userId
+                ]
+            )
+
+            if (rowCount < 1) {
+                return { success: false, error: "No se pudo actualizar el estado de favorito" };
+            }
+
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
+
+    static async getUserFavoriteDiagrams({ userId }) {
+        try {
+            const { rows, rowCount } = await pool.query(
+                `SELECT template_id, name, description, template_data, created_at, preview_image
+                FROM user_diagrams
+                WHERE user_id = $1 AND is_favorite = true
+                ORDER BY updated_at DESC`,
+                [ userId ]
+            )
+
+            if (rowCount < 1) {
+                return { 
+                    success: false, 
+                    message: "Aún no ha marcado algún diagrama como favorito"
+                }
+            }
+
+            return { success: true, data: rows }
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
 }

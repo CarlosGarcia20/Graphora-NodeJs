@@ -18,14 +18,19 @@ diagramsRouter.delete('/templates/:diagramId', DiagramController.delete)
 // Rutas para los diagramas del usuario
 diagramsRouter.get('/me', verifyToken, DiagramController.getMyDiagrams)
 
+diagramsRouter.get('/me/favorites', verifyToken, DiagramController.getUserFavoriteDiagrams)
+
 diagramsRouter.get('/me/:diagramId', verifyToken, DiagramController.getMyDiagramById)
+
+diagramsRouter.post('/me', verifyToken, DiagramController.createDiagramUser)
+
+diagramsRouter.put('/me/:diagramId', verifyToken, DiagramController.updateDiagramUser)
 
 diagramsRouter.patch('/me/delete/:diagramId', verifyToken, DiagramController.softDeleteDiagram)
 
 diagramsRouter.patch('/me/restore/:diagramId', verifyToken, DiagramController.restoreDiagram)
 
+diagramsRouter.patch('/me/favorite/:diagramId', verifyToken, DiagramController.setFavoriteStatus)
+
 diagramsRouter.delete('/me/:diagramId', verifyToken, DiagramController.deleteDiagram)
 
-diagramsRouter.post('/me', verifyToken, DiagramController.createDiagramUser)
-
-diagramsRouter.put('/me/:diagramId', verifyToken, DiagramController.updateDiagramUser)
