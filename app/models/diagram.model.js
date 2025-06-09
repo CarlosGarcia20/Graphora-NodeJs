@@ -8,7 +8,15 @@ export class DiagramModel {
                 `SELECT * FROM templates`
             )
 
-            return { success: true, data: rows}
+            // convertir imagen a base64 si existe
+            const data = rows.map(template => ({
+                ...template,
+                preview_image: template.preview_image
+                    ? `data:image/png;base64,${template.preview_image.toString('base64')}`
+                    : null
+            }));
+
+            return { success: true, data }
         } catch (error) {
             return { success: false, error: error.message }
         }
@@ -22,7 +30,19 @@ export class DiagramModel {
                 [diagramId]
             );
 
-            return { success: true, data: rows[0] };
+            if (rows.length === 0) {
+                return { success: false, error: "Plantilla no encontrada" };
+            }
+
+            const template = rows[0];
+
+             // Convertir imagen a base64 si existe
+            template.preview_image = template.preview_image
+                ? `data:image/png;base64,${template.preview_image.toString('base64')}`
+                : null;
+
+
+            return { success: true, data: template };
         } catch (error) {
             return { success: false, error: error.message };
         }
@@ -39,21 +59,22 @@ export class DiagramModel {
             if (existing.length > 0) {
                 return {
                     success: false,
-                    message: "El nombre del diagrama ya se encuentra registrado"
+                    error: "El nombre del diagrama ya se encuentra registrado"
                 }
             }
 
             const { rowCount } = await pool.query(`
                 INSERT INTO templates (
-                    name, description, category_id, template_data
+                    name, description, category_id, template_data, preview_image
                 )
-                VALUES ($1, $2, $3, $4)
+                VALUES ($1, $2, $3, $4, $5)
                 RETURNING *`,
                 [
                     input.name, 
                     input.description, 
                     input.category_id,
-                    input.template_data
+                    input.template_data,
+                    input.preview_image
                 ]
             )
 
@@ -73,28 +94,37 @@ export class DiagramModel {
             const { rowCount: exists } = await pool.query(
                 `SELECT template_id FROM templates WHERE template_id = $1`,
                 [diagramId]
-            )
+            );
 
             if (exists < 1) {
-                return { success: false, error : "Plantilla no encontrada " }
+                return { success: false, error: "Plantilla no encontrada" };
             }
 
-            const { rowCount } = await pool.query(
-                `UPDATE templates 
-                SET name = $1,
-                    description = $2,
-                    category_id = $3,
-                    template_data = $4,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE template_id = $5`,
-                [
-                    input.name,
-                    input.description,
-                    input.category_id,
-                    input.template_data,
-                    diagramId
-                ]
-            );
+            const values = [
+                input.name,
+                input.description,
+                input.category_id,
+                input.template_data,
+                diagramId
+            ];
+
+            let query = `
+            UPDATE templates 
+            SET name = $1,
+                description = $2,
+                category_id = $3,
+                template_data = $4,
+                updated_at = CURRENT_TIMESTAMP
+            `;
+
+            if (input.preview_image) {
+                query += `, preview_image = $6 WHERE template_id = $5`;
+                values.push(input.preview_image);
+            } else {
+                query += ` WHERE template_id = $5`;
+            }
+
+            const { rowCount } = await pool.query(query, values);
 
             if (rowCount < 1) {
                 return { success: false, error: "No se pudo actualizar la plantilla" };
@@ -105,6 +135,7 @@ export class DiagramModel {
             return { success: false, error: error.message };
         }
     }
+
 
     static async deleteTemplate({ diagramId }) {
         try {
@@ -138,7 +169,7 @@ export class DiagramModel {
     static async getDiagramsByUser({ userId }) {
         try {
             const { rows, rowCount } = await pool.query(
-                `SELECT template_id, name, description, template_data, created_at
+                `SELECT template_id, name, description, template_data, created_at, preview_image
                 FROM user_diagrams 
                 WHERE user_id = $1 AND status = $2
                 ORDER BY created_at DESC`,
@@ -148,8 +179,16 @@ export class DiagramModel {
             if (rowCount < 1) {
                 return { success: false, error: "No se encontraron diagramas" }
             }
+
+            // Convertir preview_image a base&4 si se guardo una imagen
+            const diagrams = rows.map(diagram => {
+                if (diagram.preview_image) {
+                    diagram.preview_image = `data:image/png;base64,${diagram.preview_image.toString('base64')}`
+                }
+                return diagram;
+            })
     
-            return { success: true, data: rows }    
+            return { success: true, data: diagrams }    
         } catch (error) {
             return { success: false, error: error.message }
         }
@@ -158,7 +197,7 @@ export class DiagramModel {
     static async getDiagramInfo({ userId, diagramId }) {
         try {
             const { rows, rowCount } = await pool.query(
-                `SELECT template_id, name, description, template_data, created_at, updated_at
+                `SELECT template_id, name, description, template_data, created_at, updated_at, preview_image
                 FROM user_diagrams
                 WHERE template_id = $1 AND user_id = $2 AND status = $3`,
                 [ 
@@ -172,7 +211,14 @@ export class DiagramModel {
                 return { success: false, error: "No se encontró el diagrama" }
             }
 
-            return { success: true, data: rows[0] }
+            const diagram = rows[0]
+
+            // Convertir el buffer a base64
+            if (diagram.preview_image) {
+                diagram.preview_image = `data:image/png;base64,${diagram.preview_image.toString('base64')}`
+            }
+
+            return { success: true, data: diagram }
         } catch (error) {
             return { success: false, error: error.message }
         }
@@ -281,20 +327,6 @@ export class DiagramModel {
 
     static async createDiagramUser({ userId, input, previewImage }) {
         try {
-            // Validar si ya existe un diagrama con el mismo nombre
-            const { rows: existing } = await pool.query(
-                `SELECT name FROM user_diagrams 
-                WHERE user_id = $1 AND name = $2 AND status = $3`,
-                [userId, input.name, DiagramStatus.ACTIVE]
-            );
-
-            if (existing.length > 0) {
-                return {
-                    success: false,
-                    error: "El nombre del diagrama ya se encuentra registrado"
-                }
-            }
-
             const { rowCount } = await pool.query(
                 `INSERT INTO user_diagrams
                 (name, description, user_id, template_data, status, preview_image) 
@@ -415,8 +447,15 @@ export class DiagramModel {
             if (rowCount < 1) {
                 return { 
                     success: false, 
-                    message: "Aún no ha marcado algún diagrama como favorito"
+                    error: "Aún no ha marcado algún diagrama como favorito"
                 }
+            }
+
+            const diagram = rows[0]
+
+            // Convertir buffer a base64
+            if (diagram.preview_image) {
+                diagram.preview_image = `data:image/png;base64,${diagram.preview_image.toString('base64')}`
             }
 
             return { success: true, data: rows }

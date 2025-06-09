@@ -9,9 +9,17 @@ diagramsRouter.get('/templates', DiagramController.getTemplates)
 
 diagramsRouter.get('/templates/:diagramId', DiagramController.getTemplateById)
 
-diagramsRouter.post('/templates', DiagramController.create)
+diagramsRouter.post(
+    '/templates', 
+    upload.single('preview_image'),
+    DiagramController.create
+)
 
-diagramsRouter.put('/templates/:diagramId', DiagramController.update)
+diagramsRouter.put(
+    '/templates/:diagramId', 
+    upload.single('preview_image'),
+    DiagramController.update
+)
 
 diagramsRouter.delete('/templates/:diagramId', DiagramController.delete)
 
