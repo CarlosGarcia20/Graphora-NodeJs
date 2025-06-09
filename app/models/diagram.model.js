@@ -279,7 +279,7 @@ export class DiagramModel {
         }
     }
 
-    static async createDiagramUser({ userId, input }) {
+    static async createDiagramUser({ userId, input, previewImage }) {
         try {
             // Validar si ya existe un diagrama con el mismo nombre
             const { rows: existing } = await pool.query(
@@ -296,14 +296,16 @@ export class DiagramModel {
             }
 
             const { rowCount } = await pool.query(
-                `INSERT INTO user_diagrams(name, description, user_id, template_data, status) 
-                VALUES ($1, $2, $3, $4, $5)`,
+                `INSERT INTO user_diagrams
+                (name, description, user_id, template_data, status, preview_image) 
+                VALUES ($1, $2, $3, $4, $5, $6)`,
                 [
                     input.name,
                     input.description || null,
                     userId,
                     input.template_data,
-                    DiagramStatus.ACTIVE
+                    DiagramStatus.ACTIVE,
+                    previewImage
                 ]
             )
 
@@ -317,31 +319,40 @@ export class DiagramModel {
         }
     }
 
-    static async updateDiagramUser({ userId, diagramId, input }) {
+    static async updateDiagramUser({ userId, diagramId, input, preview_image }) {
         try {
-            // Verificar si el diagrama existe
             const { rowCount: exists } = await pool.query(
                 `SELECT template_id FROM user_diagrams 
                 WHERE template_id = $1 AND user_id = $2 AND status = $3`,
-                [diagramId, userId, DiagramStatus.ACTIVE]
+                [ 
+                    diagramId, 
+                    userId, 
+                    DiagramStatus.ACTIVE 
+                ]
             );
 
             if (exists < 1) {
                 return { success: false, error: "Diagrama no encontrado" };
             }
 
-            const { rowCount } = await pool.query(
-                `UPDATE user_diagrams 
-                SET name = $1, description = $2, template_data = $3, updated_at = CURRENT_TIMESTAMP
-                WHERE template_id = $4 AND user_id = $5`,
-                [
-                    input.name,
-                    input.description || null,
-                    input.template_data,
-                    diagramId,
-                    userId
-                ]
-            );
+            let query = `
+            UPDATE user_diagrams
+            SET name = $1,
+                description = $2,
+                template_data = $3,
+                updated_at = CURRENT_TIMESTAMP
+        `;
+            let values = [input.name, input.description || null, input.template_data];
+
+            if (preview_image) {
+                query += `, preview_image = $4 WHERE template_id = $5 AND user_id = $6`;
+                values.push(preview_image, diagramId, userId);
+            } else {
+                query += ` WHERE template_id = $4 AND user_id = $5`;
+                values.push(diagramId, userId);
+            }
+
+            const { rowCount } = await pool.query(query, values);
 
             if (rowCount < 1) {
                 return { success: false, error: "No se pudo actualizar el diagrama" };
@@ -352,6 +363,7 @@ export class DiagramModel {
             return { success: false, error: error.message };
         }
     }
+
 
     static async setFavoriteStatus({ userId, diagramId, input }) {
         try {

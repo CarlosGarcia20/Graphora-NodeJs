@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DiagramController } from "../controllers/diagram.controller.js";
 import { verifyToken } from "../middlewares/tokenMiddleware.js";
-
+import upload from '../middlewares/uploads.js' 
 
 export const diagramsRouter = Router();
 
@@ -22,9 +22,19 @@ diagramsRouter.get('/me/favorites', verifyToken, DiagramController.getUserFavori
 
 diagramsRouter.get('/me/:diagramId', verifyToken, DiagramController.getMyDiagramById)
 
-diagramsRouter.post('/me', verifyToken, DiagramController.createDiagramUser)
+diagramsRouter.post(
+    '/me', 
+    verifyToken,
+    upload.single('preview_image'), 
+    DiagramController.createDiagramUser
+)
 
-diagramsRouter.put('/me/:diagramId', verifyToken, DiagramController.updateDiagramUser)
+diagramsRouter.put(
+    '/me/:diagramId', 
+    verifyToken, 
+    upload.single('preview_image'),
+    DiagramController.updateDiagramUser
+)
 
 diagramsRouter.patch('/me/delete/:diagramId', verifyToken, DiagramController.softDeleteDiagram)
 

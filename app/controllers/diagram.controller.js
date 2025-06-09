@@ -242,10 +242,12 @@ export class DiagramController {
             }
 
             const userId = req.user.userId
+            const previewImage = req.file?.buffer || null
 
             const result = await DiagramModel.createDiagramUser({
                 userId,
-                input: validation.data
+                input: validation.data,
+                previewImage
             });
 
             if (!result.success) {
@@ -276,11 +278,14 @@ export class DiagramController {
             }
 
             const userId = req.user.userId
+            const { diagramId } = req.params.diagramId
+            const previewImage = req.file?.buffer || null
 
             const result = await DiagramModel.updateDiagramUser({
                 userId,
-                diagramId: req.params.diagramId,
-                input: validation.data
+                diagramId,
+                input: validation.data,
+                preview_image: previewImage
             })
 
             if (!result.success) {
