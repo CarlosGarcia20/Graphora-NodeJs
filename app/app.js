@@ -8,6 +8,7 @@ import { PORT } from './config/config.js'
 import { usersRouter } from './routes/user.routes.js'
 import { loginRouter } from './routes/auth.routes.js'
 import { diagramsRouter } from './routes/diagram.routes.js'
+import { emailRouter } from './routes/email.routes.js'
 
 // Middlewares
 import { corsMiddleware } from './middlewares/cors.js'
@@ -23,6 +24,7 @@ app.disable('x-powered-by')
 app.use('/auth', loginRouter)
 app.use('/users', usersRouter)
 app.use('/diagram', diagramsRouter)
+app.use('/email', emailRouter)
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
