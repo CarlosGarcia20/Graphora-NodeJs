@@ -327,10 +327,11 @@ export class DiagramModel {
 
     static async createDiagramUser({ userId, input, previewImage }) {
         try {
-            const { rowCount } = await pool.query(
+            const { rows, rowCount } = await pool.query(
                 `INSERT INTO user_diagrams
                 (name, description, user_id, template_data, status, preview_image) 
-                VALUES ($1, $2, $3, $4, $5, $6)`,
+                VALUES ($1, $2, $3, $4, $5, $6) 
+                RETURNING *`,
                 [
                     input.name,
                     input.description || null,
@@ -344,8 +345,8 @@ export class DiagramModel {
             if (rowCount < 1) {
                 return { success: false, error: "No se pudo guardar el diagrama" }
             }
-            
-            return { success: true }
+
+            return { success: true, data: rows[0].template_id }
         } catch (error) {
             return { success: false, error: error.message }
         }

@@ -270,9 +270,6 @@ export class DiagramController {
         try {
             const rawBody = req.body
 
-            console.log("Raw body:", rawBody);
-            
-
             if (typeof rawBody.template_data === 'string') {
                 try {
                     rawBody.template_data = JSON.parse(rawBody.template_data)
@@ -307,7 +304,8 @@ export class DiagramController {
             }
 
             return res.status(201).json({
-                message: "Diagrama guardado exitosamente"
+                message: "Diagrama guardado exitosamente",
+                diagramId: result.data
             })
         } catch (error) {
             return res.status(500).json({ 
