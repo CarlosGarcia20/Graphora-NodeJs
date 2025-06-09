@@ -281,20 +281,6 @@ export class DiagramModel {
 
     static async createDiagramUser({ userId, input }) {
         try {
-            // Validar si ya existe un diagrama con el mismo nombre
-            const { rows: existing } = await pool.query(
-                `SELECT name FROM user_diagrams 
-                WHERE user_id = $1 AND name = $2 AND status = $3`,
-                [userId, input.name, DiagramStatus.ACTIVE]
-            );
-
-            if (existing.length > 0) {
-                return {
-                    success: false,
-                    error: "El nombre del diagrama ya se encuentra registrado"
-                }
-            }
-
             const { rowCount } = await pool.query(
                 `INSERT INTO user_diagrams(name, description, user_id, template_data, status) 
                 VALUES ($1, $2, $3, $4, $5)`,
