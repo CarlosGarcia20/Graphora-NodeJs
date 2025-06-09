@@ -36,8 +36,7 @@ export class DiagramController {
 
             if (!result.success) {
                 return res.status(404).json({ 
-                    message: "Ocurrió un error",
-                    error: result.error 
+                    message: result.error
                 })
             }
 
@@ -55,13 +54,30 @@ export class DiagramController {
 
     static async create(req, res) {
         try {
-            const validation = validateTemplate(req.body);
+            const rawBody = req.body
+
+            if (typeof rawBody.template_data === 'string') {
+                try {
+                    rawBody.template_data = JSON.parse(rawBody.template_data)
+                } catch (error) {
+                    return res.status(400).json({
+                        message: "template_data no es un JSON válido"
+                    })
+                }
+            }
+
+            const validation = validateTemplate(rawBody);
     
             if (!validation.success) {
                 return res.status(400).json({ error: validation.error.issues })
             }
+
+            const input = {
+                ...validation.data, 
+                preview_image: req.file?.buffer || null
+            }
     
-            const result = await DiagramModel.createTemplate({ input: validation.data })
+            const result = await DiagramModel.createTemplate({ input })
     
             if (!result.success) {
                 return res.status(400).json({
@@ -84,15 +100,34 @@ export class DiagramController {
     static async update(req, res) {
         try {
             const { diagramId } = req.params;
-            const validation = validateUpdateTemplate(req.body)
+            const rawBody = req.body;
+
+            // Convertir template_data a objeto si viene como string
+            if (typeof rawBody.template_data === 'string') {
+                try {
+                    rawBody.template_data = JSON.parse(rawBody.template_data);
+                } catch (error) {
+                    return res.status(400).json({
+                        message: "template_data no es un JSON válido"
+                    });
+                }
+            }
+
+            const validation = validateUpdateTemplate(rawBody)
 
             if (!validation.success) {
                 return res.status(400).json({ error: validation.error.issues })
             }
 
+            // Inyectar la imagen si se envió
+            const input = {
+                ...validation.data,
+                preview_image: req.file?.buffer || null
+            };
+
             const result = await DiagramModel.updateTemplate({
-                diagramId: diagramId,
-                input: validation.data
+                diagramId,
+                input
             })
 
             if (!result.success) {
@@ -233,7 +268,19 @@ export class DiagramController {
 
     static async createDiagramUser(req, res) {
         try {
-            const validation = validateCreateDiagram(req.body);
+            const rawBody = req.body
+
+            if (typeof rawBody.template_data === 'string') {
+                try {
+                    rawBody.template_data = JSON.parse(rawBody.template_data)
+                } catch (error) {
+                    return res.status(400).json({
+                        message: "template_data no es un JSON válido"
+                    })
+                }
+            }
+
+            const validation = validateCreateDiagram(rawBody);
 
             if (!validation.success) {
                 return res.status(400).json({ 
@@ -242,10 +289,12 @@ export class DiagramController {
             }
 
             const userId = req.user.userId
+            const previewImage = req.file?.buffer || null
 
             const result = await DiagramModel.createDiagramUser({
                 userId,
-                input: validation.data
+                input: validation.data,
+                previewImage
             });
 
             if (!result.success) {
@@ -267,7 +316,19 @@ export class DiagramController {
 
     static async updateDiagramUser(req, res) {
         try {
-            const validation = validateCreateDiagram(req.body);
+            const rawBody = req.body
+
+            if (typeof rawBody.template_data === 'string') {
+                try {
+                    rawBody.template_data = JSON.parse(rawBody.template_data)
+                } catch (error) {
+                    return res.status(400).json({
+                        message: "template_data no es un JSON válido"
+                    })
+                }
+            }
+
+            const validation = validateCreateDiagram(rawBody);
 
             if (!validation.success) {
                 return res.status(400).json({ 
@@ -276,11 +337,14 @@ export class DiagramController {
             }
 
             const userId = req.user.userId
+            const { diagramId } = req.params
+            const previewImage = req.file?.buffer || null
 
             const result = await DiagramModel.updateDiagramUser({
                 userId,
-                diagramId: req.params.diagramId,
-                input: validation.data
+                diagramId,
+                input: validation.data,
+                preview_image: previewImage
             })
 
             if (!result.success) {
@@ -338,7 +402,7 @@ export class DiagramController {
             })
         } catch (error) {
             return res.status(500).json({ 
-                messageeee: "Internal Server Error", 
+                message: "Internal Server Error", 
                 error: error.message 
             })
         }
