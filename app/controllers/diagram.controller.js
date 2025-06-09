@@ -268,28 +268,18 @@ export class DiagramController {
 
     static async createDiagramUser(req, res) {
         try {
-            const rawBody = req.body
-
-            if (typeof rawBody.template_data === 'string') {
-                try {
-                    rawBody.template_data = JSON.parse(rawBody.template_data)
-                } catch (error) {
-                    return res.status(400).json({
-                        message: "template_data no es un JSON válido"
-                    })
-                }
-            }
+            const rawBody = req.body;
 
             const validation = validateCreateDiagram(rawBody);
 
             if (!validation.success) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     message: JSON.parse(validation.error.message)
                 });
             }
 
-            const userId = req.user.userId
-            const previewImage = req.file?.buffer || null
+            const userId = req.user.userId;
+            const previewImage = req.file?.buffer || null;
 
             const result = await DiagramModel.createDiagramUser({
                 userId,
@@ -300,19 +290,20 @@ export class DiagramController {
             if (!result.success) {
                 return res.status(400).json({
                     message: result.error || "Error al guardar el diagrama"
-                })
+                });
             }
 
             return res.status(201).json({
                 message: "Diagrama guardado exitosamente"
-            })
+            });
         } catch (error) {
-            return res.status(500).json({ 
-                message: "Internal Server Error", 
-                error: error.message 
+            return res.status(500).json({
+                message: "Internal Server Error",
+                error: error.message
             });
         }
     }
+
 
     static async updateDiagramUser(req, res) {
         try {
