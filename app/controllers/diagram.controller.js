@@ -408,4 +408,25 @@ export class DiagramController {
             })
         }
     }
+
+    static async getUserDiagramsInTrash(req, res) {
+        try {
+            const userId = req.user.userId
+
+            const result = await DiagramModel.getUserDiagramsInTrash({ userId })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({
+                data: result.data
+            })
+        } catch (error) {
+            return res.status(500).json({ 
+                message: "Internal Server Error", 
+                error: error.message 
+            })
+        }
+    }
 }

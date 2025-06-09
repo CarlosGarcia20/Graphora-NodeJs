@@ -464,4 +464,35 @@ export class DiagramModel {
             return { success: false, error: error.message };
         }
     }
+
+    static async getUserDiagramsInTrash({ userId }) {
+        try {
+            const { rows, rowCount } = await pool.query(
+                `SELECT template_id, name, description, template_data, created_at, preview_image
+                FROM user_diagrams
+                WHERE user_id = $1 AND status = $2
+                ORDER BY updated_at DESC`,
+                [userId, DiagramStatus.DELETED]
+            )
+
+            if (rowCount < 1) {
+                return {
+                    success: false,
+                    error: "No hay diagramas en la papelera"
+                }
+            }
+
+            const diagrams = rows.map(diagram => {
+                // Convertir buffer a base64
+                if (diagram.preview_image) {
+                    diagram.preview_image = `data:image/png;base64,${diagram.preview_image.toString('base64')}`
+                }
+                return diagram
+            })
+
+            return { success: true, data: diagrams }
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    }
 }

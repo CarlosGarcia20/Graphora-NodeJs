@@ -28,6 +28,8 @@ diagramsRouter.get('/me', verifyToken, DiagramController.getMyDiagrams)
 
 diagramsRouter.get('/me/favorites', verifyToken, DiagramController.getUserFavoriteDiagrams)
 
+diagramsRouter.get('/me/trash', verifyToken, DiagramController.getUserDiagramsInTrash)
+
 diagramsRouter.get('/me/:diagramId', verifyToken, DiagramController.getMyDiagramById)
 
 diagramsRouter.post(
