@@ -63,13 +63,15 @@ export class userController {
                 return res.status(404).json({ message: "Usuario no encontrado" });
             }
 
-            const { email, name, lastname } = result.data;
-
             return res.status(200).json({
-                user: { email, name, lastname } 
+                user: {
+                    email: result.data.email,
+                    name: result.data.name,
+                    lastname: result.data.lastname
+                }
             });
         } catch (error) {
-            return res.status(500).json({ message: "Error interno", error: error.message });
+            return res.status(500).json({ message: "Internal Server Error", error: error.message });
         }
     }
 }

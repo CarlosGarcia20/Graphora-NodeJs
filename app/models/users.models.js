@@ -75,7 +75,7 @@ export class UserModel {
         try {
             const { rows } = await pool.query(`
                 SELECT * FROM users
-                WHERE userid = $1`
+                WHERE userid = $1`,
                 [userId]
             );
 
@@ -85,7 +85,7 @@ export class UserModel {
 
             return { success: true, data: rows[0] };
         } catch (error) {
-            return { success: false, error };
+            return { success: false, error: error.message };
         }
     }
 }
