@@ -14,6 +14,7 @@ import { diagramsRouter } from './routes/diagram.routes.js'
 // Middlewares
 import { corsMiddleware, ACCEPTED_ORIGINS } from './middlewares/cors.js'
 import { setupNotificationSocket } from './sockets/notification.socket.js'
+import { invitationRouter } from './routes/invitations.router.js';
 
 const app = express()
 
@@ -27,6 +28,7 @@ app.disable('x-powered-by')
 app.use('/auth', loginRouter)
 app.use('/users', usersRouter)
 app.use('/diagram', diagramsRouter)
+app.use('/invitation', invitationRouter)
 
 // Crear servidor HTTP
 const httpServer = http.createServer(app)
