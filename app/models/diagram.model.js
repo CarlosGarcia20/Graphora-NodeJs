@@ -169,7 +169,7 @@ export class DiagramModel {
     static async getDiagramsByUser({ userId }) {
         try {
             const { rows, rowCount } = await pool.query(
-                `SELECT template_id, name, description, template_data, created_at, preview_image
+                `SELECT template_id, name, description, template_data, created_at, is_favorite, preview_image
                 FROM user_diagrams 
                 WHERE user_id = $1 AND status = $2
                 ORDER BY created_at DESC`,
@@ -438,7 +438,7 @@ export class DiagramModel {
     static async getUserFavoriteDiagrams({ userId }) {
         try {
             const { rows, rowCount } = await pool.query(
-                `SELECT template_id, name, description, template_data, created_at, preview_image
+                `SELECT template_id, name, description, template_data, created_at, is_favorite, preview_image
                 FROM user_diagrams
                 WHERE user_id = $1 AND is_favorite = true
                 ORDER BY updated_at DESC`,
