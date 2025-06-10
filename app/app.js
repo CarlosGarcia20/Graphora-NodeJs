@@ -1,6 +1,6 @@
 import express from 'express'
 import morgan from 'morgan'
-import http from 'http';
+import { createServer } from 'node:http';
 import { Server } from 'socket.io'
 
 // Archivos de configuracion
@@ -13,10 +13,18 @@ import { diagramsRouter } from './routes/diagram.routes.js'
 
 // Middlewares
 import { corsMiddleware, ACCEPTED_ORIGINS } from './middlewares/cors.js'
-import { setupNotificationSocket } from './sockets/notification.socket.js'
-import { invitationRouter } from './routes/invitations.router.js';
+import { setupSocketConnections } from './sockets/connection_handler.js';
 
 const app = express()
+const server = createServer(app)
+const io = new Server(server, {
+    cors: {
+        origin: ACCEPTED_ORIGINS,
+        methods: ['GET', 'POST']
+    }
+})
+
+setupSocketConnections(io)
 
 // Middleware
 app.use(morgan('dev'))
@@ -28,28 +36,8 @@ app.disable('x-powered-by')
 app.use('/auth', loginRouter)
 app.use('/users', usersRouter)
 app.use('/diagram', diagramsRouter)
-app.use('/invitation', invitationRouter)
 
 // Crear servidor HTTP
-const httpServer = http.createServer(app)
-// app.listen(PORT, () => {
-//     console.log(`Servidor corriendo en el puerto ${PORT}`);
-// })
-
-// Crear servidor Socket.IO
-const io = new Server(httpServer, {
-    cors: {
-        origin: ACCEPTED_ORIGINS,
-        methods: ['GET', 'POST'],
-    }
-})
-
-io.on('connection', (socket) => {
-    console.log('Nuevo cliente conectado:', socket.id);
-    setupNotificationSocket(io, socket)
-})
-
-// Iniciar servidor
-httpServer.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Servidor corriendo en el puerto ${PORT}`);
 })

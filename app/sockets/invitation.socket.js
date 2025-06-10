@@ -1,6 +1,6 @@
 import { InvitationModel } from "../models/invitation.model.js";
 
-export function setupNotificationSocket(io, socket) {
+export function setupInvitationSocket(io, socket) {
     socket.on("new-notification", async (data) => {
         try {
             const saveNotification = await InvitationModel.saveNotification(data)
