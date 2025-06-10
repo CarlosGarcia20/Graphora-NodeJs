@@ -16,7 +16,6 @@
         "node": "18.17.0"
     },
     "dependencies": {
-        "@neondatabase/serverless": "0.10.4",
         "bcrypt": "5.1.1",
         "cors": "2.8.5",
         "dotenv": "16.4.7",
@@ -25,8 +24,6 @@
         "morgan": "1.10.0",
         "multer": "^2.0.1",
         "pg": "8.13.1",
-        "resend": "^4.5.2",
-        "semver": "^7.7.2",
         "uuid": "11.1.0",
         "zod": "3.24.2"
     },
