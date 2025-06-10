@@ -105,7 +105,7 @@ export class UserModel {
 
             if (input.email !== currentEmail) {
                 const { rowCount: emailExists } = await pool.query(
-                    `SELECT 1 FROM users WHERE email = $1 and userid != $2`,
+                    `SELECT 1 FROM users WHERE email = $1 AND userid != $2`,
                     [ input.email, userId ]
                 )
 
@@ -114,36 +114,50 @@ export class UserModel {
                 }
             }
 
-            let hashedPassword = null;
-            if (input.password && input.password.trim() !== "") {
-                hashedPassword = await EncryptionHelper.hashPassword(input.password);
+            const fields = [];
+            const values = [];
+            let paramIndex = 1;
+
+            if (input.email) {
+                fields.push(`email = $${paramIndex++}`);
+                values.push(input.email);
             }
 
-            await pool.query(`
-                UPDATE users
-                SET email = $1, name = $2, lastname = $3
-                WHERE userid = $4`,
-                [
-                    input.email,
-                    input.name,
-                    input.lastName,
-                    userId
-                ]
-            );
-
-            // Si se envió una nueva contraseña, actualizamos solo ese campo
-            if (hashedPassword) {
-                await pool.query(`
-                    UPDATE users
-                    SET password = $1
-                    WHERE userid = $2`,
-                    [hashedPassword, userId]
-                );
+            if (input.name) {
+                fields.push(`name = $${paramIndex++}`);
+                values.push(input.name);
             }
 
-            return { success: true, message: "Usuario actualizado con éxito" };
+            if (input.lastname) {
+                fields.push(`lastname = $${paramIndex++}`);
+                values.push(input.lastname);
+            }
+
+            if (input.password && input.password.trim() !== '') {
+                const hashedPassword = await EncryptionHelper.hashPassword(input.password);
+                fields.push(`password = $${paramIndex++}`);
+                values.push(hashedPassword);
+            }
+
+            if (fields.length === 0) {
+                return { success: false, message: "No se proporcionaron campos para actualizar" };
+            }
+
+            // Agregamos el userId al final para el WHERE
+            values.push(userId);
+
+            const query = `
+            UPDATE users
+            SET ${fields.join(', ')}
+            WHERE userid = $${paramIndex}
+            RETURNING *`;
+
+            const { rows: updated } = await pool.query(query, values);
+
+            return { success: true, message: "Usuario actualizado correctamente" };
         } catch (error) {
-            return { success: false, message: error.message }
+            return { success: false, message: error.message };
         }
     }
+
 }
