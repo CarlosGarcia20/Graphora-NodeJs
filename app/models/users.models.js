@@ -128,7 +128,7 @@ export class UserModel {
                 values.push(input.name);
             }
 
-            if (input.lastname) {
+            if (input.lastName) {
                 fields.push(`lastname = $${paramIndex++}`);
                 values.push(input.lastName);
             }
