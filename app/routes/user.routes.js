@@ -11,3 +11,5 @@ usersRouter.get('/', verifyToken ,userController.getUsers);
 usersRouter.get('/:userId', userController.getUserById);
 
 usersRouter.delete('/:idUser', verifyToken, userController.deleteUser);
+
+usersRouter.patch('/', verifyToken, userController.updateUser)
