@@ -1,5 +1,6 @@
 import { UserModel } from "../models/users.models.js";
 import { validateRegister } from "../schemas/register.js";
+import { validateUpdate } from "../schemas/updateUser.js"
 
 export class userController {
     static async create(req, res) {
@@ -72,6 +73,30 @@ export class userController {
             });
         } catch (error) {
             return res.status(500).json({ message: "Internal Server Error", error: error.message });
+        }
+    }
+
+    static async updateUser(req, res) {
+        try {
+            const userId = req.user.userId
+            const validation = validateUpdate(req.body);
+
+            if (!validation.success) {
+                return res.status(400).json({ message: JSON.parse(validation.error.message) });
+            }
+
+            const result = await UserModel.updateUser({ userId, input: validation.data })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.message });
+            }
+
+            return res.status(200).json({ message: result.message });
+        } catch (error) {
+            return res.status(500).json({
+                 message: "Internal Server Error", 
+                 error: error.message 
+            });
         }
     }
 }

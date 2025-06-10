@@ -88,4 +88,62 @@ export class UserModel {
             return { success: false, error: error.message };
         }
     }
+
+    static async updateUser({ userId, input }) {
+        try {
+            const { rowCount: existing, rows } = await pool.query(
+                `SELECT email FROM users
+                WHERE userid = $1`,
+                [userId]
+            )            
+
+            if (existing < 1) {
+                return { success: false, message: "Usuario no encontrado" };
+            }
+
+            const currentEmail = rows[0].email
+
+            if (input.email !== currentEmail) {
+                const { rowCount: emailExists } = await pool.query(
+                    `SELECT 1 FROM users WHERE email = $1 and userid != $2`,
+                    [ input.email, userId ]
+                )
+
+                if (emailExists > 0) {
+                    return { success: false, message: "El email ya se encuentra registrado" };
+                }
+            }
+
+            let hashedPassword = null;
+            if (input.password && input.password.trim() !== "") {
+                hashedPassword = await EncryptionHelper.hashPassword(input.password);
+            }
+
+            await pool.query(`
+                UPDATE users
+                SET email = $1, name = $2, lastname = $3
+                WHERE userid = $4`,
+                [
+                    input.email,
+                    input.name,
+                    input.lastName,
+                    userId
+                ]
+            );
+
+            // Si se envió una nueva contraseña, actualizamos solo ese campo
+            if (hashedPassword) {
+                await pool.query(`
+                    UPDATE users
+                    SET password = $1
+                    WHERE userid = $2`,
+                    [hashedPassword, userId]
+                );
+            }
+
+            return { success: true, message: "Usuario actualizado con éxito" };
+        } catch (error) {
+            return { success: false, message: error.message }
+        }
+    }
 }
