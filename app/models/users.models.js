@@ -130,7 +130,7 @@ export class UserModel {
 
             if (input.lastname) {
                 fields.push(`lastname = $${paramIndex++}`);
-                values.push(input.lastname);
+                values.push(input.lastName);
             }
 
             if (input.password && input.password.trim() !== '') {
