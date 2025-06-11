@@ -429,4 +429,25 @@ export class DiagramController {
             })
         }
     }
+
+    static async getInvitedDiagrams(req, res) {
+        try {
+             const { email } = req.body
+
+            const result = await DiagramModel.getInvitedDiagrams({ email })
+
+            if (!result.success) {
+                return res.status(404).json({ message: result.error })
+            }
+
+            return res.status(200).json({
+                data: result.data
+            })
+        } catch (error) {
+            return res.status(500).json({ 
+                message: "Internal Server Error", 
+                error: error.message 
+            })
+        }
+    }
 }

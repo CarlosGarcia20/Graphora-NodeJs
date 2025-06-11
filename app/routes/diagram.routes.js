@@ -32,6 +32,8 @@ diagramsRouter.get('/me/trash', verifyToken, DiagramController.getUserDiagramsIn
 
 diagramsRouter.get('/me/:diagramId', verifyToken, DiagramController.getMyDiagramById)
 
+diagramsRouter.get('/me/invited/:diagramId', verifyToken, DiagramController.getInvitedDiagrams)
+
 diagramsRouter.post(
     '/me', 
     verifyToken,

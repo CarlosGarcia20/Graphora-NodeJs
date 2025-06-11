@@ -495,4 +495,23 @@ export class DiagramModel {
             return { success: false, error: error.message };
         }
     }
+
+    static async getInvitedDiagrams({ email }) {
+        try {
+            const { rows } = await pool.query(
+                `SELECT id AS invitation_id,
+                    user_diagrams.diagram_id AS diagramId,
+                    user_diagrams.name,
+                    user_diagrams.description,
+                    user_diagrams.template_data,
+                    user_diagrams.status,
+                    user_diagrams.created_at,
+                    user_diagrams.is_favorite,
+                    user_diagrams.preview_image
+                    `
+            )
+        } catch (error) {
+             return { success: false, error: error.message };
+        }
+    }
 }
