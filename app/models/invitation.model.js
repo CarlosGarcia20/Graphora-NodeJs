@@ -14,10 +14,31 @@ export class InvitationModel {
                     userId
                 ]
             )
-            
+
             return { success: true, data: rows[0] }
         } catch (error) {
             return { success: false, error: error.message }
         }
+    }
+
+    static async recoveredInvitations({ email }) {
+        try {
+            const { rows } = await pool.query(
+                `SELECT * FROM diagram_invitations
+                WHERE invited_user_email = $1 AND status = 'P'`,
+                [email]
+            )
+
+            return rows;
+        } catch (error) {
+            return { success: false, error: error.message }
+        }
+    }
+
+    static async updateStatus({ id, status }) {
+        await pool.query(
+            `UPDATE diagram_invitations SET status = $1 WHERE id = $2`,
+            [status, id]
+        );
     }
 }

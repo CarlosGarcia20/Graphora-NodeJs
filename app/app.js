@@ -21,7 +21,8 @@ const io = new Server(server, {
     cors: {
         origin: ACCEPTED_ORIGINS,
         methods: ['GET', 'POST']
-    }
+    },
+    connectionStateRecovery: true
 })
 
 setupSocketConnections(io)

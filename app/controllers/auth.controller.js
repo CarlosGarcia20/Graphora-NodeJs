@@ -77,7 +77,6 @@ export class loginController {
             // Regresar la respuesta
             res.json({ accessToken, refreshToken: newRefreshToken })
         } catch (error) {
-            console.log(error)
             res.status(500).json({ code: 'Internal Server Error', message: 'Error al renovar token' });
         }
     }
