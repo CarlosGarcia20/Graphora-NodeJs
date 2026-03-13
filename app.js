@@ -26,11 +26,11 @@ export const createApp = ({ models }) => {
     app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
 
     app.use((err, req, res, next) => {
-        console.error("🔥 Error detectado:", err.message);
+        console.error("Error detectado:", err);
         
         res.status(500).json({ 
             message: "Internal Server Error", 
-            error: err.message 
+            // error: err.message 
         });
     });
     
