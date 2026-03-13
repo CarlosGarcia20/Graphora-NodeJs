@@ -1,44 +1,31 @@
 import pool from "../../config/db.js";
-import { EncryptionHelper } from '../../helpers/encryption.helper.js'
-import { v4 as uuidv4 } from 'uuid';
 
 export class UserModel {
-    createUser = async({ input }) => {
-        try {
-            const { email, password, name, lastName } = input;
-            
-            // Validacion para verificar si el email ya existe en la base de datos
-            const { rows: user } = await pool.query(`SELECT * FROM users WHERE email = $1`, [email]);
+    createUser = async({ email, password, name, lastName }) => {
+        const { rows: user } = await pool.query(
+            `SELECT * FROM users WHERE email = $1`, 
+            [email]
+        )
 
-            if (user.length > 0) {
-                return { success: false, error: "El email ya se encuentra registrado" };
-            }
-
-            // Creacion del uuid para el iduser
-            const userId = uuidv4();
-
-            const hashedPassword = await EncryptionHelper.hashPassword(password);
-
-            const { rows } = await pool.query(`
-                INSERT INTO users (
-                    userid, email, password, name, lastname
-                )
-                VALUES ($1, $2, $3, $4, $5)
-                RETURNING *
-                `,
-                [
-                    userId,
-                    email,
-                    hashedPassword,
-                    name,
-                    lastName
-                ]
-            );
-
-            return { success: true };
-        } catch (error) {
-            return { success: false, error: error.message };
+        if (user.length > 0) {
+            return { success: false, error: "El email ya se encuentra registrado" };
         }
+
+        await pool.query(`
+            INSERT INTO users (
+                email, password, name, lastname
+            )
+            VALUES ($1, $2, $3, $4)
+            `,
+            [
+                email,
+                password,
+                name,
+                lastName
+            ]
+        );
+
+        return { success: true };
     }
 
     deleteUser = async({ userId }) => {

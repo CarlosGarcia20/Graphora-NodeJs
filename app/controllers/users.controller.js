@@ -1,6 +1,8 @@
 import { validateRegister } from "../schemas/register.js";
 import { validateUpdate } from "../schemas/updateUser.js"
 import { catchAsync } from "../util/catchAsync.js";
+// import { EncryptionHelper } from '../../helpers/encryption.helper.js'
+import { EncryptionHelper } from "../helpers/encryption.helper.js"
 
 export class UserController {
     constructor({ userModel }) {
@@ -8,16 +10,26 @@ export class UserController {
     }
     
     create = catchAsync(async(req, res, next) => {
-        const resultado = validateRegister(req.body);
+        const registerValidation = validateRegister(req.body);
 
-        if (!resultado.success) {
-            return res.status(400).json({ message: JSON.parse(resultado.error.message) });
+        if (!registerValidation.success) {
+            return res.status(400).json({
+                message: "Datos incorrectos",
+                errors: registerValidation.error.flatten().fieldErrors
+            });
         }
 
-        const result = await this.userModel.createUser({ input: resultado.data });
+        const hashedPassword = await EncryptionHelper.hashPassword(registerValidation.data.password);
+        
+        const result = await this.userModel.createUser({ 
+            email: registerValidation.data.email,
+            password: hashedPassword,
+            name: registerValidation.data.name,
+            lastName: registerValidation.data.lastName     
+        });
         
         if (!result.success) {
-            return res.status(500).json({ message: result.error });
+            return res.status(409).json({ message: result.error });
         }
 
         return res.status(201).json({ message: "Usuario creado con éxito" });
