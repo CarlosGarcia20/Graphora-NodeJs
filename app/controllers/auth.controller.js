@@ -1,17 +1,26 @@
 import { loginModel } from "../models/auth.models.js";
 import { validateLogin } from "../schemas/login.js";
 import { tokenService } from "../util/jwtUtils.js";
+import 'dotenv/config';
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 export class loginController {
     static async login(req, res) {
         try {
-            const resultado = validateLogin(req.body);
+            const authValidation = validateLogin(req.body);
            
-            if (!resultado.success) {
-                return res.status(400).json({ message: JSON.parse(resultado.error.message) });
+            if (!authValidation.success) {
+                return res.status(400).json({ 
+                    message: "Datos incorrectos",
+                    errors: authValidation.error.flatten().fieldErrors
+                });
             }
 
-            const result = await loginModel.login({ input: resultado.data });
+            const result = await loginModel.login({ 
+                email: authValidation.data.email, 
+                password: authValidation.data.password 
+            });
            
             if (!result.success) {
                 return res.status(500).json({ message: result.message });
@@ -36,7 +45,7 @@ export class loginController {
                 }
             });
         } catch (error) {
-            console.error(error)
+            // console.error(error)
             return res.status(500).json({ message: "Internal Server Error", error: error.message });
         }
     }
