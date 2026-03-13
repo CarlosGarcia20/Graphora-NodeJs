@@ -1,9 +1,12 @@
-import { UserModel } from "../models/users.models.js";
 import { validateRegister } from "../schemas/register.js";
 import { validateUpdate } from "../schemas/updateUser.js"
 
-export class userController {
-    static async create(req, res) {
+export class UserController {
+    constructor({ userModel }) {
+        this.userModel = userModel
+    }
+    
+    create = async(req, res) => {
         try {
             const resultado = validateRegister(req.body);
 
@@ -11,7 +14,7 @@ export class userController {
                 return res.status(400).json({ message: JSON.parse(resultado.error.message) });
             }
 
-            const result = await UserModel.createUser({ input: resultado.data });
+            const result = await this.userModel.createUser({ input: resultado.data });
             
             if (!result.success) {
                 return res.status(500).json({ message: result.error });
@@ -23,10 +26,10 @@ export class userController {
         }
     }
 
-    static async deleteUser(req, res) {
+    deleteUser = async(req, res) => {
         try {
-            const { idUser } = req.params;
-            const result = await UserModel.deleteUser({ idUser });
+            const { userId } = req.params;
+            const result = await this.userModel.deleteUser({ userId });
 
             if (!result.success) {
                 return res.status(404).json({ message: "Usuario no encontrado" });
@@ -38,9 +41,9 @@ export class userController {
         }
     }
 
-    static async getUsers(req, res) {
+    getUsers = async(req, res) => {
         try {
-            const result = await UserModel.getAllUsers();
+            const result = await this.userModel.getAllUsers();
 
             if (!result.success) {
                 return res.status(500).json({ 
@@ -51,14 +54,16 @@ export class userController {
 
             return res.status(200).json({ users: result.data });
         } catch (error) {
+            console.log(error);
             return res.status(500).json({ message: "Error interno", error: error.message });
+            
         }
     }
 
-    static async getUserById(req, res) {
+    getUserById = async(req, res) => {
         try {
             const { userId } = req.params;
-            const result = await UserModel.getUserById({ userId });
+            const result = await this.userModel.getUserById({ userId });
 
             if (!result.success) {
                 return res.status(404).json({ message: "Usuario no encontrado" });
@@ -76,7 +81,7 @@ export class userController {
         }
     }
 
-    static async updateUser(req, res) {
+    updateUser = async(req, res) => {
         try {
             const userId = req.user.userId
             const validation = validateUpdate(req.body);
@@ -85,7 +90,7 @@ export class userController {
                 return res.status(400).json({ message: JSON.parse(validation.error.message) });
             }
 
-            const result = await UserModel.updateUser({ userId, input: validation.data })
+            const result = await this.userModel.updateUser({ userId, input: validation.data })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.message });
@@ -94,8 +99,8 @@ export class userController {
             return res.status(200).json({ message: result.message });
         } catch (error) {
             return res.status(500).json({
-                 message: "Internal Server Error", 
-                 error: error.message 
+                message: "Internal Server Error", 
+                error: error.message 
             });
         }
     }
