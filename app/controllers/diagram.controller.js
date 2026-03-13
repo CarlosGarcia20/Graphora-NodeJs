@@ -1,12 +1,15 @@
-import { DiagramModel } from "../models/diagram.model.js";
 import { validateCreateDiagram } from "../schemas/createDiagram.schema.js";
 import { validateTemplate } from "../schemas/template.js";
 import { validateUpdateTemplate } from "../schemas/updateTemplate.js";
 
 export class DiagramController {
-    static async getTemplates(req, res) {
+    constructor({ diagramModel }) {
+        this.diagramModel = diagramModel
+    }
+
+    getTemplates = async(req, res) => {
         try {
-            const result = await DiagramModel.getTemplates();
+            const result = await this.diagramModel.getTemplates();
 
             if (!result.success) {
                 return res.status(500).json({ 
@@ -29,10 +32,10 @@ export class DiagramController {
         
     }
 
-    static async getTemplateById(req, res) {
+    getTemplateById = async(req, res) => {
         try {
             const { diagramId } = req.params;
-            const result = await DiagramModel.getTemplateById({ diagramId })
+            const result = await this.diagramModel.getTemplateById({ diagramId })
 
             if (!result.success) {
                 return res.status(404).json({ 
@@ -52,7 +55,7 @@ export class DiagramController {
         }
     }
 
-    static async create(req, res) {
+    create = async(req, res) => {
         try {
             const rawBody = req.body
 
@@ -77,7 +80,7 @@ export class DiagramController {
                 preview_image: req.file?.buffer || null
             }
     
-            const result = await DiagramModel.createTemplate({ input })
+            const result = await this.diagramModel.createTemplate({ input })
     
             if (!result.success) {
                 return res.status(400).json({
@@ -97,7 +100,7 @@ export class DiagramController {
         }
     }
 
-    static async update(req, res) {
+    update = async(req, res) => {
         try {
             const { diagramId } = req.params;
             const rawBody = req.body;
@@ -125,7 +128,7 @@ export class DiagramController {
                 preview_image: req.file?.buffer || null
             };
 
-            const result = await DiagramModel.updateTemplate({
+            const result = await this.diagramModel.updateTemplate({
                 diagramId,
                 input
             })
@@ -143,11 +146,11 @@ export class DiagramController {
         }
     }
 
-    static async delete(req, res) {
+    delete = async(req, res) => {
         try {
             const { diagramId } = req.params
     
-            const result = await DiagramModel.deleteTemplate({ diagramId })
+            const result = await this.diagramModel.deleteTemplate({ diagramId })
     
             if (!result.success) {
                 return res.status(404).json({ error: result.error })
@@ -163,10 +166,10 @@ export class DiagramController {
     }
 
     // Diagramas del usuario
-    static async getMyDiagrams(req, res) {
+    getMyDiagrams = async(req, res) => {
         try {
             const userId = req.user.userId
-            const result = await DiagramModel.getDiagramsByUser({ userId })
+            const result = await this.diagramModel.getDiagramsByUser({ userId })
 
             if (!result.success) {
                 return res.status(400).json({
@@ -183,12 +186,12 @@ export class DiagramController {
         }
     }
     
-    static async getMyDiagramById(req, res) {
+    getMyDiagramById = async(req, res) => {
         try {
             const userId = req.user.userId
             const { diagramId } = req.params
             
-            const result = await DiagramModel.getDiagramInfo({ userId, diagramId })
+            const result = await this.diagramModel.getDiagramInfo({ userId, diagramId })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.error })
@@ -203,12 +206,12 @@ export class DiagramController {
         }
     }
 
-    static async softDeleteDiagram(req, res) {
+    softDeleteDiagram = async(req, res) => {
         try {
             const userId = req.user.userId
             const { diagramId } = req.params
 
-            const result = await DiagramModel.softDeleteDiagram({ userId, diagramId })
+            const result = await this.diagramModel.softDeleteDiagram({ userId, diagramId })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.error })
@@ -223,12 +226,12 @@ export class DiagramController {
         }
     }
 
-    static async restoreDiagram(req, res) {
+    restoreDiagram = async(req, res) => {
         try {
             const userId = req.user.userId
             const { diagramId } = req.params
 
-            const result = await DiagramModel.restoreDiagram({ userId, diagramId })
+            const result = await this.diagramModel.restoreDiagram({ userId, diagramId })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.error })
@@ -246,12 +249,12 @@ export class DiagramController {
         }
     }
 
-    static async deleteDiagram(req, res) {
+    deleteDiagram = async(req, res) => {
         try {
             const userId = req.user.userId
             const { diagramId } = req.params
 
-            const result = await DiagramModel.deleteDiagram({ userId, diagramId })
+            const result = await this.diagramModel.deleteDiagram({ userId, diagramId })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.error })
@@ -266,7 +269,7 @@ export class DiagramController {
         }
     }
 
-    static async createDiagramUser(req, res) {
+    createDiagramUser = async(req, res) => {
         try {
             const rawBody = req.body
 
@@ -291,7 +294,7 @@ export class DiagramController {
             const userId = req.user.userId
             const previewImage = req.file?.buffer || null
 
-            const result = await DiagramModel.createDiagramUser({
+            const result = await this.diagramModel.createDiagramUser({
                 userId,
                 input: validation.data,
                 previewImage
@@ -315,7 +318,7 @@ export class DiagramController {
         }
     }
 
-    static async updateDiagramUser(req, res) {
+    updateDiagramUser = async(req, res) => {
         try {
             const rawBody = req.body
 
@@ -341,7 +344,7 @@ export class DiagramController {
             const { diagramId } = req.params
             const previewImage = req.file?.buffer || null
 
-            const result = await DiagramModel.updateDiagramUser({
+            const result = await this.diagramModel.updateDiagramUser({
                 userId,
                 diagramId,
                 input: validation.data,
@@ -365,13 +368,13 @@ export class DiagramController {
         }
     }
 
-    static async setFavoriteStatus(req, res) {
+    setFavoriteStatus = async(req, res) => {
         try {
             const userId = req.user.userId
             const { diagramId } = req.params
             const input = req.body
 
-            const result = await DiagramModel.setFavoriteStatus({ userId, diagramId, input })
+            const result = await this.diagramModel.setFavoriteStatus({ userId, diagramId, input })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.error })
@@ -388,11 +391,11 @@ export class DiagramController {
         }
     }
     
-    static async getUserFavoriteDiagrams(req, res) {
+    getUserFavoriteDiagrams = async(req, res) => {
         try {
             const userId = req.user.userId
 
-            const result = await DiagramModel.getUserFavoriteDiagrams({ userId })
+            const result = await this.diagramModel.getUserFavoriteDiagrams({ userId })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.error })
@@ -409,11 +412,11 @@ export class DiagramController {
         }
     }
 
-    static async getUserDiagramsInTrash(req, res) {
+    getUserDiagramsInTrash = async(req, res) => {
         try {
             const userId = req.user.userId
 
-            const result = await DiagramModel.getUserDiagramsInTrash({ userId })
+            const result = await this.diagramModel.getUserDiagramsInTrash({ userId })
 
             if (!result.success) {
                 return res.status(404).json({ message: result.error })

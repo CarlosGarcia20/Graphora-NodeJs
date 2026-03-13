@@ -7,7 +7,7 @@ import { PORT } from './app/config/config.js'
 //Rutas 
 import { createUserRouter } from './app/routes/user.routes.js'
 import { createAuthRouter } from './app/routes/auth.routes.js'
-import { diagramsRouter } from './app/routes/diagram.routes.js'
+import { createDiagramsRouter } from './app/routes/diagram.routes.js'
 
 // Middlewares
 import { corsMiddleware } from './app/middlewares/cors.js'
@@ -23,7 +23,7 @@ export const createApp = ({ models }) => {
     
     app.use('/auth', createAuthRouter({ loginModel: models.loginModel }))
     app.use('/users', createUserRouter({ userModel: models.userModel }))
-    app.use('/diagram', diagramsRouter)
+    app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
     
     app.listen(PORT, () => {
         console.log(`Servidor corriendo en el puerto ${PORT}`);

@@ -3,54 +3,61 @@ import { DiagramController } from "../controllers/diagram.controller.js";
 import { verifyToken } from "../middlewares/tokenMiddleware.js";
 import upload from '../middlewares/uploads.js' 
 
-export const diagramsRouter = Router();
+export const createDiagramsRouter = ({ diagramModel }) => {
+    const diagramsRouter = Router();
 
-diagramsRouter.get('/templates', DiagramController.getTemplates)
+    const diagramController = new DiagramController({ diagramModel })
+    
+    diagramsRouter.get('/templates', diagramController.getTemplates)
+    
+    diagramsRouter.get('/templates/:diagramId', diagramController.getTemplateById)
+    
+    diagramsRouter.post(
+        '/templates', 
+        upload.single('preview_image'),
+        diagramController.create
+    )
+    
+    diagramsRouter.put(
+        '/templates/:diagramId', 
+        upload.single('preview_image'),
+        diagramController.update
+    )
+    
+    diagramsRouter.delete('/templates/:diagramId', diagramController.delete)
+    
+    // Rutas para los diagramas del usuario
+    diagramsRouter.get('/me', verifyToken, diagramController.getMyDiagrams)
+    
+    diagramsRouter.get('/me/favorites', verifyToken, diagramController.getUserFavoriteDiagrams)
+    
+    diagramsRouter.get('/me/trash', verifyToken, diagramController.getUserDiagramsInTrash)
+    
+    diagramsRouter.get('/me/:diagramId', verifyToken, diagramController.getMyDiagramById)
+    
+    diagramsRouter.post(
+        '/me', 
+        verifyToken,
+        upload.single('preview_image'), 
+        diagramController.createDiagramUser
+    )
+    
+    diagramsRouter.put(
+        '/me/:diagramId', 
+        verifyToken, 
+        upload.single('preview_image'),
+        diagramController.updateDiagramUser
+    )
+    
+    diagramsRouter.patch('/me/delete/:diagramId', verifyToken, diagramController.softDeleteDiagram)
+    
+    diagramsRouter.patch('/me/restore/:diagramId', verifyToken, diagramController.restoreDiagram)
+    
+    diagramsRouter.patch('/me/favorite/:diagramId', verifyToken, diagramController.setFavoriteStatus)
+    
+    diagramsRouter.delete('/me/:diagramId', verifyToken, diagramController.deleteDiagram)
 
-diagramsRouter.get('/templates/:diagramId', DiagramController.getTemplateById)
+    return diagramsRouter;
+}
 
-diagramsRouter.post(
-    '/templates', 
-    upload.single('preview_image'),
-    DiagramController.create
-)
-
-diagramsRouter.put(
-    '/templates/:diagramId', 
-    upload.single('preview_image'),
-    DiagramController.update
-)
-
-diagramsRouter.delete('/templates/:diagramId', DiagramController.delete)
-
-// Rutas para los diagramas del usuario
-diagramsRouter.get('/me', verifyToken, DiagramController.getMyDiagrams)
-
-diagramsRouter.get('/me/favorites', verifyToken, DiagramController.getUserFavoriteDiagrams)
-
-diagramsRouter.get('/me/trash', verifyToken, DiagramController.getUserDiagramsInTrash)
-
-diagramsRouter.get('/me/:diagramId', verifyToken, DiagramController.getMyDiagramById)
-
-diagramsRouter.post(
-    '/me', 
-    verifyToken,
-    upload.single('preview_image'), 
-    DiagramController.createDiagramUser
-)
-
-diagramsRouter.put(
-    '/me/:diagramId', 
-    verifyToken, 
-    upload.single('preview_image'),
-    DiagramController.updateDiagramUser
-)
-
-diagramsRouter.patch('/me/delete/:diagramId', verifyToken, DiagramController.softDeleteDiagram)
-
-diagramsRouter.patch('/me/restore/:diagramId', verifyToken, DiagramController.restoreDiagram)
-
-diagramsRouter.patch('/me/favorite/:diagramId', verifyToken, DiagramController.setFavoriteStatus)
-
-diagramsRouter.delete('/me/:diagramId', verifyToken, DiagramController.deleteDiagram)
 
