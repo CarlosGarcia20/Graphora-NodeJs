@@ -24,6 +24,15 @@ export const createApp = ({ models }) => {
     app.use('/auth', createAuthRouter({ loginModel: models.loginModel }))
     app.use('/users', createUserRouter({ userModel: models.userModel }))
     app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
+
+    app.use((err, req, res, next) => {
+        console.error("🔥 Error detectado:", err.message);
+        
+        res.status(500).json({ 
+            message: "Internal Server Error", 
+            error: err.message 
+        });
+    });
     
     app.listen(PORT, () => {
         console.log(`Servidor corriendo en el puerto ${PORT}`);
