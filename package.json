@@ -4,8 +4,9 @@
     "main": "app/app.js",
     "type": "module",
     "scripts": {
-        "start": "node app/app.js",
-        "dev": "node --watch app/app.js",
+        "start": "node app.js",
+        "dev": "node --watch app.js",
+        "dev:postgre":  "node --watch server-with-postgre.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "migrate": "sequelize-cli db:migrate --config app/config/config.js --migrations-path migrations",
         "migrate:undo": "sequelize-cli db:migrate:undo --config app/config/config.js --migrations-path migrations",
