@@ -1,8 +1,8 @@
-import pool from "../config/db.js";
-import { EncryptionHelper } from "../helpers/encryption.helper.js";
+import pool from "../../config/db.js";
+import { EncryptionHelper } from "../../helpers/encryption.helper.js";
 
-export class loginModel {
-    static async login({ email, password }) {
+export class LoginModel {
+    login = async({ email, password }) => {
         try {
            
             const { rows } = await pool.query(
