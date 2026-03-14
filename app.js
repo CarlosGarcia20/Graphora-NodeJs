@@ -11,11 +11,13 @@ import { createDiagramsRouter } from './app/routes/diagram.routes.js'
 
 // Middlewares
 import { corsMiddleware } from './app/middlewares/cors.js'
+import cookieParser from 'cookie-parser'
 
 export const createApp = ({ models }) => {
     const app = express()
     
     app.use(morgan('dev'))
+    app.use(cookieParser())
     app.use(express.json())
     app.use(corsMiddleware())
     
@@ -23,11 +25,10 @@ export const createApp = ({ models }) => {
     
     /* 
     * TODO GENERAL
-    *  - Cambiar los tokens para que utilicen las cookies
-    * 
+    *  - Cambiar las rutas para utilizar el nuevo middleware de los tokens
     */
 
-    app.use('/auth', createAuthRouter({ loginModel: models.loginModel }))
+    app.use('/auth', createAuthRouter({ loginModel: models.loginModel, tokenModel: models.tokenModel }))
     app.use('/users', createUserRouter({ userModel: models.userModel }))
     app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
 
