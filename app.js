@@ -21,6 +21,12 @@ export const createApp = ({ models }) => {
     
     app.disable('x-powered-by')
     
+    /* 
+    * TODO GENERAL
+    *  - Cambiar los tokens para que utilicen las cookies
+    * 
+    */
+
     app.use('/auth', createAuthRouter({ loginModel: models.loginModel }))
     app.use('/users', createUserRouter({ userModel: models.userModel }))
     app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
