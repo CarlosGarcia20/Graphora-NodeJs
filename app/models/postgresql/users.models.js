@@ -28,123 +28,105 @@ export class UserModel {
         return { success: true };
     }
 
-    deleteUser = async({ userId }) => {
-        try {
-            const { rowCount } = await pool.query(`
-                DELETE FROM users
-                WHERE userid = $1`,
-                [userId]
-            );
-    
-            if (rowCount === 0) {
-                return res.status(404).json({ success: false });
-            }
-    
-            return { success: true };
-    
-        } catch (error) {
-            // console.error("Error al eliminar: ", error);
-            return { success: false, error };
-        }
+    getAllUsers = async() => {
+        const { rows } = await pool.query(`
+            SELECT userid, email, name, lastname
+            FROM users`
+        );
+
+        return { success: true, data: rows };
     }
 
-    getAllUsers = async() => {
-        try {
-            const { rows } = await pool.query("SELECT * FROM users");
+    deleteUser = async({ userId }) => {
+        const { rowCount } = await pool.query(`
+            DELETE FROM users
+            WHERE userid = $1`,
+            [userId]
+        );
 
-            return { success: true, data: rows };
-        } catch (error) {
-            return { success: false, error: error.message };
+        if (rowCount === 0) {
+            return {
+                success: false,
+                message: "Usuario no encontrado"
+            };
         }
+
+        return { success: true };
     }
 
     getUserById = async({ userId }) => {
-        try {
-            const { rows } = await pool.query(`
-                SELECT * FROM users
-                WHERE userid = $1`,
-                [userId]
-            );
+        const { rows } = await pool.query(`
+            SELECT userid, email, name, lastname
+            FROM users
+            WHERE userid = $1`,
+            [userId]
+        );
 
-            if (rows.length === 0) {
-                return { success: false };
-            }
-
-            return { success: true, data: rows[0] };
-        } catch (error) {
-            return { success: false, error: error.message };
+        if (rows.length === 0) {
+            return { success: false };
         }
+
+        return { success: true, data: rows[0] };
     }
 
-    updateUser = async({ userId, input }) => {
-        try {
-            const { rowCount: existing, rows } = await pool.query(
-                `SELECT email FROM users
-                WHERE userid = $1`,
-                [userId]
-            )            
+    getUserPassword = async (userId) => {
+        const { rows } = await pool.query(
+            `SELECT password FROM users WHERE userid = $1`, 
+            [userId]
+        );
 
-            if (existing < 1) {
-                return { success: false, message: "Usuario no encontrado" };
-            }
-
-            const currentEmail = rows[0].email
-
-            if (input.email !== currentEmail) {
-                const { rowCount: emailExists } = await pool.query(
-                    `SELECT 1 FROM users WHERE email = $1 AND userid != $2`,
-                    [ input.email, userId ]
-                )
-
-                if (emailExists > 0) {
-                    return { success: false, message: "El email ya se encuentra registrado" };
-                }
-            }
-
-            const fields = [];
-            const values = [];
-            let paramIndex = 1;
-
-            if (input.email) {
-                fields.push(`email = $${paramIndex++}`);
-                values.push(input.email);
-            }
-
-            if (input.name) {
-                fields.push(`name = $${paramIndex++}`);
-                values.push(input.name);
-            }
-
-            if (input.lastName) {
-                fields.push(`lastname = $${paramIndex++}`);
-                values.push(input.lastName);
-            }
-
-            if (input.password && input.password.trim() !== '') {
-                const hashedPassword = await EncryptionHelper.hashPassword(input.password);
-                fields.push(`password = $${paramIndex++}`);
-                values.push(hashedPassword);
-            }
-
-            if (fields.length === 0) {
-                return { success: false, message: "No se proporcionaron campos para actualizar" };
-            }
-
-            // Agregamos el userId al final para el WHERE
-            values.push(userId);
-
-            const query = `
-            UPDATE users
-            SET ${fields.join(', ')}
-            WHERE userid = $${paramIndex}
-            RETURNING *`;
-
-            const { rows: updated } = await pool.query(query, values);
-
-            return { success: true, message: "Usuario actualizado correctamente" };
-        } catch (error) {
-            return { success: false, message: error.message };
+        if (rows.length === 0) {
+            return { success: false };
         }
+
+        return { success: true, password: rows[0].password };
     }
 
+    updateUserProfile = async({ userId, name, lastname }) => {
+        const { rowCount } = await pool.query(
+            `UPDATE users 
+            SET name = $1, lastname = $2 
+            WHERE userid = $3`,
+            [
+                name,
+                lastname,
+                userId
+            ]
+        );
+
+        if (rowCount === 0) {
+            return { success: false, message: "Usuario no encontrado" };
+        }
+
+        return { success: true }
+    }
+
+    updateEmailOnly = async(userId, newEmail) => {
+        await pool.query(
+            `UPDATE users
+            SET email = $1
+            WHERE userid = $2`,
+            [newEmail, userId]
+        )
+
+        return { success: true }
+    }
+
+    updateOnlyPassword = async(userId, password) => {
+        await pool.query(
+            `UPDATE users SET password = $1 WHERE userid = $2`,
+            [password, userId]
+        );
+
+        return { success: true };
+    }
+
+    checkEmailExists = async(email) => {
+        const { rowCount } = await pool.query(
+            `SELECT email FROM users WHERE email = $1`,
+            [email]
+        )
+
+        if (rowCount > 0) return true;
+    }
 }

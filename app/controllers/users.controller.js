@@ -1,8 +1,9 @@
 import { validateRegister } from "../schemas/register.js";
-import { validateUpdate } from "../schemas/updateUser.js"
 import { catchAsync } from "../util/catchAsync.js";
-// import { EncryptionHelper } from '../../helpers/encryption.helper.js'
 import { EncryptionHelper } from "../helpers/encryption.helper.js"
+import { validateUpdateUserProfile } from "../schemas/updateUserProfile.js";
+import { validatePasswordUpdate } from "../schemas/updatePassword.js";
+import { validateEmailUpdate } from "../schemas/updateEmail.js";
 
 export class UserController {
     constructor({ userModel }) {
@@ -53,10 +54,10 @@ export class UserController {
         const result = await this.userModel.deleteUser({ userId });
 
         if (!result.success) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
+            return res.status(404).json({ message: result.message });
         }
 
-        return res.status(200).json({ message: "Usuario eliminado con éxito" });
+        return res.sendStatus(204);
     })
 
     getUserById = catchAsync(async(req, res, next) => {
@@ -67,29 +68,107 @@ export class UserController {
             return res.status(404).json({ message: "Usuario no encontrado" });
         }
 
-        return res.status(200).json({
-            user: {
-                email: result.data.email,
-                name: result.data.name,
-                lastname: result.data.lastname
-            }
-        });
+        return res.status(200).json({ result: result.data });
     })
 
-    updateUser = catchAsync(async(req, res, next) => {
-        const userId = req.user.userId
-        const validation = validateUpdate(req.body);
+    updateUserProfile = catchAsync(async(req, res, next) => {
+        // -> luego se utilizaran los tokens, mientras sera por parametro
+        // const userId = req.user.userId
 
-        if (!validation.success) {
-            return res.status(400).json({ message: JSON.parse(validation.error.message) });
+        const updateValidation = validateUpdateUserProfile(req.body);
+        if (!updateValidation.success) {
+            return res.status(400).json({ 
+                message: "Datos incorrectos",
+                errors: updateValidation.error.flatten().fieldErrors
+            });
         }
+        
+        const { userId } = req.params;
 
-        const result = await this.userModel.updateUser({ userId, input: validation.data })
+        const result = await this.userModel.updateUserProfile({ 
+            userId, 
+            name: updateValidation.data.name,
+            lastname: updateValidation.data.lastname
+        });
 
         if (!result.success) {
             return res.status(404).json({ message: result.message });
         }
 
-        return res.status(200).json({ message: result.message });
-    })
+        return res.status(200).json({ message: "Datos actualizados correctamente" });
+    });
+
+    updateEmail = catchAsync(async(req, res, next) => {
+        // -> luego se utilizaran los tokens, mientras sera por parametro
+        // const userId = req.user.userIdx
+
+        const emailValidation = validateEmailUpdate(req.body);
+        if (!emailValidation.success) {
+            return res.status(400).json({ 
+                message: "Datos incorrectos",
+                errors: emailValidation.error.flatten().fieldErrors
+            });
+        }
+        
+        const { userId } = req.params;
+        const { currentPassword, newEmail } = emailValidation.data
+
+        const verifyPassword = await this._verifyCurrentPassword(userId, currentPassword);
+        if (!verifyPassword.success) {
+            return res.status(verifyPassword.status).json({ message: verifyPassword.message });
+        }
+
+        const emailExist = await this.userModel.checkEmailExists(newEmail);
+        if(emailExist) {
+            return res.status(409).json({ message: "El correo ya esta en uso" })
+        }
+
+        await this.userModel.updateEmailOnly(userId, newEmail);
+
+        return res.status(200).json({ message: "Correo electrónico actualizado con éxito" })
+
+    });
+
+    updatePassword = catchAsync(async(req, res, next) => {
+        // -> luego se utilizaran los tokens, mientras sera por parametro
+        // const userId = req.user.userIdx
+
+        const passwordValidation = validatePasswordUpdate(req.body);
+        if (!passwordValidation.success) {
+            return res.status(400).json({ 
+                message: "Datos incorrectos",
+                errors: passwordValidation.error.flatten().fieldErrors
+            });
+        }
+        
+        const { userId } = req.params;
+        const { currentPassword, newPassword } = passwordValidation.data;
+
+        const verifyPassword = await this._verifyCurrentPassword(userId, currentPassword);
+        if (!verifyPassword.success) {
+            return res.status(verifyPassword.status).json({ message: verifyPassword.message });
+        }
+
+        const hashedNewPassword = await EncryptionHelper.hashPassword(newPassword);
+
+        await this.userModel.updateOnlyPassword(userId, hashedNewPassword);
+
+        return res.status(200).json({ message: "Contraseña actualizada con éxito" });
+    });
+
+    _verifyCurrentPassword = async (userId, currentPassword) => {
+        const user = await this.userModel.getUserPassword(userId);
+        
+        if (!user.success) {
+            return { success: false, status: 404, message: "Usuario no encontrado" };
+        }
+
+        const isValid = await EncryptionHelper.comparePassword(currentPassword, user.password);
+        
+        if (!isValid) {
+            return { success: false, status: 401, message: "La contraseña actual es incorrecta" };
+        }
+
+        return { success: true };
+    }
 }
