@@ -1,15 +1,16 @@
 import { Router } from "express";
 import { LoginController } from "../controllers/auth.controller.js";
-import { verifyRefreshToken } from "../middlewares/tokenMiddleware.js";
 
-export const createAuthRouter = ({ loginModel }) => {
+export const createAuthRouter = ({ loginModel, tokenModel }) => {
     const loginRouter = Router();
     
-    const loginController = new LoginController({ loginModel })
+    const loginController = new LoginController({ loginModel, tokenModel })
     
     loginRouter.post('/', loginController.login)
+
+    loginRouter.post('/logout', loginController.logout)
     
-    // loginRouter.post('/refresh', verifyRefreshToken, loginController.refreshToken)
+    loginRouter.get('/refresh', loginController.refreshToken)
 
     return loginRouter;
 }
