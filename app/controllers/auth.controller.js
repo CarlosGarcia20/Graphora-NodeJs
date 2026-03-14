@@ -1,4 +1,6 @@
+import { EncryptionHelper } from "../helpers/encryption.helper.js";
 import { validateLogin } from "../schemas/login.js";
+import { catchAsync } from "../util/catchAsync.js";
 import { tokenService } from "../util/jwtUtils.js";
 import 'dotenv/config';
 
@@ -9,49 +11,46 @@ export class LoginController {
         this.loginModel = loginModel
     }
 
-    login = async(req, res) => {
-        try {
-            const authValidation = validateLogin(req.body);
-           
-            if (!authValidation.success) {
-                return res.status(400).json({ 
-                    message: "Datos incorrectos",
-                    errors: authValidation.error.flatten().fieldErrors
-                });
-            }
-
-            const result = await this.loginModel.login({ 
-                email: authValidation.data.email, 
-                password: authValidation.data.password 
+    login = catchAsync(async(req, res, next) => {
+        const authValidation = validateLogin(req.body);
+        
+        if (!authValidation.success) {
+            return res.status(400).json({ 
+                message: "Datos incorrectos",
+                errors: authValidation.error.flatten().fieldErrors
             });
-           
-            if (!result.success) {
-                return res.status(500).json({ message: result.message });
-            }
-            
-            const { userId: userId, email, name, lastname } = result.data;
-
-            // Generar tokens de acceso y actualización
-            const { accessToken, refreshToken } = tokenService.generateTokens({ userId });
-            
-            // Guardar el token de actualización en la base de datos o en la memoria
-            // await tokenService.storeRefreshToken(userId, refreshToken);
-
-            return res.status(200).json({ 
-                message: "Inicio de sesión exitoso",
-                accessToken, 
-                refreshToken, 
-                user: {
-                    name: name,
-                    lastname: lastname,
-                    email: email
-                }
-            });
-        } catch (error) {
-            console.error(error)
-            return res.status(500).json({ message: "Internal Server Error" });
         }
-    }
+
+        const { email, password} = authValidation.data
+
+        const result = await this.loginModel.login(email);
+        if (!result.success) {
+            return res.status(401).json({ message: "Correo o contraseña incorrectos" });
+        }
+        
+        const user = result.data
+
+        const isValidPassword = await EncryptionHelper.comparePassword(password, user.password)
+        if (!isValidPassword) {
+            return res.status(401).json({ message: "Correo o contraseña incorrectos" });
+        }
+
+        // Generar tokens de acceso y actualización
+        // const { accessToken, refreshToken } = tokenService.generateTokens({ userId });
+        
+        // Guardar el token de actualización en la base de datos o en la memoria
+        // await tokenService.storeRefreshToken(userId, refreshToken);
+
+        return res.status(200).json({ 
+            message: "Inicio de sesión exitoso",
+            // accessToken, 
+            // refreshToken, 
+            user: {
+                name: user.name,
+                lastname: user.lastname,
+            }
+        });
+    })
 
     // logout = async(req, res) => {
     //     const { refreshToken } = req.body;
