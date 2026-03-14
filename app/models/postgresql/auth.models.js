@@ -3,7 +3,7 @@ import pool from "../../config/db.js";
 export class LoginModel {
     login = async(email) => {
         const { rows } = await pool.query(
-            `SELECT email, password, name, lastname
+            `SELECT *
             FROM users WHERE email = $1`,
             [ email ]
         );
