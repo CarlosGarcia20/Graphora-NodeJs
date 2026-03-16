@@ -72,8 +72,7 @@ export class UserController {
     })
 
     updateUserProfile = catchAsync(async(req, res, next) => {
-        // -> luego se utilizaran los tokens, mientras sera por parametro
-        // const userId = req.user.userId
+        const userId = req.user.userId
 
         const updateValidation = validateUpdateUserProfile(req.body);
         if (!updateValidation.success) {
@@ -82,9 +81,6 @@ export class UserController {
                 errors: updateValidation.error.flatten().fieldErrors
             });
         }
-        
-        const { userId } = req.params;
-
         const result = await this.userModel.updateUserProfile({ 
             userId, 
             name: updateValidation.data.name,
@@ -99,8 +95,7 @@ export class UserController {
     });
 
     updateEmail = catchAsync(async(req, res, next) => {
-        // -> luego se utilizaran los tokens, mientras sera por parametro
-        // const userId = req.user.userIdx
+        const userId = req.user.userId
 
         const emailValidation = validateEmailUpdate(req.body);
         if (!emailValidation.success) {
@@ -109,8 +104,6 @@ export class UserController {
                 errors: emailValidation.error.flatten().fieldErrors
             });
         }
-        
-        const { userId } = req.params;
         const { currentPassword, newEmail } = emailValidation.data
 
         const verifyPassword = await this._verifyCurrentPassword(userId, currentPassword);
@@ -130,8 +123,7 @@ export class UserController {
     });
 
     updatePassword = catchAsync(async(req, res, next) => {
-        // -> luego se utilizaran los tokens, mientras sera por parametro
-        // const userId = req.user.userIdx
+        const userId = req.user.userId
 
         const passwordValidation = validatePasswordUpdate(req.body);
         if (!passwordValidation.success) {
@@ -140,8 +132,6 @@ export class UserController {
                 errors: passwordValidation.error.flatten().fieldErrors
             });
         }
-        
-        const { userId } = req.params;
         const { currentPassword, newPassword } = passwordValidation.data;
 
         const verifyPassword = await this._verifyCurrentPassword(userId, currentPassword);

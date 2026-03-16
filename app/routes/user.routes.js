@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { UserController } from "../controllers/users.controller.js";
-import { verifyToken } from "../middlewares/tokenMiddleware.js";
+import { requireAuth } from "../middlewares/tokenMiddleware.js";
 
 export const createUserRouter = ({ userModel }) => {
     const usersRouter = Router();
@@ -20,22 +20,13 @@ export const createUserRouter = ({ userModel }) => {
     
     /*
     * A partir de aquí se crearan rutas para que el usuario pueda modificar su perfil
-    * TODO
-    * Antes de modificar los tokens se estara utilizando el id del usuario
-    * por parametro, luego se cambiara para que lo tome por el token
     *  
-    * - Ruta para cambiar solo el nombre y el apellido del usuario
-    * - Ruta para cambiar el correo (se tiene que validar)
-    * - Ruta para cambiar la contraseña (se tiene que validar)
     */
-    // usersRouter.patch('/', verifyToken, userController.updateUser)
-    // usersRouter.patch('/profile', userController.updateUser)
-    usersRouter.patch('/profile/:userId', userController.updateUserProfile)
+    usersRouter.patch('/profile', requireAuth, userController.updateUserProfile)
 
-    // Actualiza correo (exigiendo contraseña actual por seguridad)
-    usersRouter.patch('/profile/email/:userId', userController.updateEmail);
+    usersRouter.patch('/profile/email', requireAuth, userController.updateEmail);
 
-    usersRouter.patch('/profile/password/:userId', userController.updatePassword);
+    usersRouter.patch('/profile/password', requireAuth, userController.updatePassword);
     
     return usersRouter;
 }
