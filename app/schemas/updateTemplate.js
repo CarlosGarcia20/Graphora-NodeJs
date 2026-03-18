@@ -3,7 +3,7 @@ import zod from 'zod';
 const updateTemplateSchema = zod.object({
     name: zod.string().min(1).optional(),
     description: zod.string().nullable().optional(),
-    category_id: zod.number().int().optional(),
+    category_id: zod.coerce.number().int().optional(),
     template_data: zod.record(zod.any()).optional()
 });
 
