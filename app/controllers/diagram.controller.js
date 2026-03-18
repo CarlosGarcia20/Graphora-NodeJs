@@ -1,49 +1,36 @@
 import { validateCreateDiagram } from "../schemas/createDiagram.schema.js";
 import { validateTemplate } from "../schemas/template.js";
 import { validateUpdateTemplate } from "../schemas/updateTemplate.js";
+import { catchAsync } from "../util/catchAsync.js";
+import { CloudinaryHelper } from "../helpers/cloudinary.helper.js";
 
 export class DiagramController {
     constructor({ diagramModel }) {
         this.diagramModel = diagramModel
     }
 
-    getTemplates = async(req, res, next) => {
+    getTemplates = catchAsync(async(req, res, next) => {
         const result = await this.diagramModel.getTemplates();
 
-        if (!result.success) {
-            return res.status(500).json({ 
-                message: "Error al obtener las plantillas" ,
-                error: result.error
-            });
+        if (result.rows.length === 0) {
+            return res.status(200).json({ templates: [] });
         }
 
-        if (result.data.length === 0) {
-            return res.status(404).json({ message: "No se encontraron plantillas" });
-        }
+        return res.status(200).json({ templates: result.rows });
+    })
 
-        return res.status(200).json({ templates: result.data });
-    }
-
-    getTemplateById = async(req, res, next) => {
+    getTemplateById = catchAsync(async(req, res, next) => {
         const { diagramId } = req.params;
         const result = await this.diagramModel.getTemplateById({ diagramId })
 
         if (!result.success) {
-            return res.status(404).json({ 
-                message: result.error
-            })
+            return res.status(404).json({ message: result.error });
         }
 
-        if (!result.data) {
-            return res.status(404).json({ message: "Diagrama no encontrado" });
-        }
+        return res.status(200).json({ diagram: result.data });
+    })
 
-        return res.status(200).json({
-            diagram: result.data
-        });
-    }
-
-    create = async(req, res, next) => {
+    create = catchAsync(async(req, res, next) => {
         const rawBody = req.body
 
         if (typeof rawBody.template_data === 'string') {
@@ -57,34 +44,40 @@ export class DiagramController {
         }
 
         const validation = validateTemplate(rawBody);
-
         if (!validation.success) {
-            return res.status(400).json({ error: validation.error.issues })
+            return res.status(400).json({ error: validation.error.flatten().fieldErrors });
         }
 
-        const input = {
+        let imageUrl = null;
+        let imagePublicId = null;
+        
+        if (req.file) {
+            const uploadResult = await CloudinaryHelper.uploadImageBuffer(req.file.buffer);
+            imageUrl = uploadResult.url;
+            imagePublicId = uploadResult.public_id;
+        }
+
+        const inputData = {
             ...validation.data, 
-            preview_image: req.file?.buffer || null
-        }
+            preview_image: imageUrl
+        };
 
-        const result = await this.diagramModel.createTemplate({ input })
+        const result = await this.diagramModel.createTemplate(inputData)
 
         if (!result.success) {
-            return res.status(400).json({
-                error: result.error || "Ocurrió un error al guardar la plantilla"
-            })
+            if (imagePublicId) {
+                await CloudinaryHelper.deleteImage(imagePublicId);
+            }
+            return res.status(409).json({ message: result.error });
         }
 
-        return res.status(201).json({
-            message: "Plantilla creada exitosamente",
-        });
-    }
+        return res.status(201).json({ message: "Plantilla creada exitosamente" });
+    })
 
     update = async(req, res, next) => {
         const { diagramId } = req.params;
         const rawBody = req.body;
 
-        // Convertir template_data a objeto si viene como string
         if (typeof rawBody.template_data === 'string') {
             try {
                 rawBody.template_data = JSON.parse(rawBody.template_data);
@@ -96,30 +89,49 @@ export class DiagramController {
         }
 
         const validation = validateUpdateTemplate(rawBody)
-
         if (!validation.success) {
-            return res.status(400).json({ error: validation.error.issues })
+            return res.status(400).json({ error: validation.error.flatten().fieldErrors })
         }
 
-        // Inyectar la imagen si se envió
-        const input = {
+        const existingTemplate = await this.diagramModel.getTemplateById({ diagramId });
+        if (!existingTemplate.success) {
+            return res.status(404).json({ message: "Plantilla no encontrada" });
+        }
+        const oldImageUrl = existingTemplate.data.preview_image;
+
+        let newImageUrl = null;
+        let newImagePublicId = null;
+
+        if (req.file) {
+            const uploadResult = await CloudinaryHelper.uploadImageBuffer(req.file.buffer);
+            newImageUrl = uploadResult.url;
+            newImagePublicId = uploadResult.public_id;
+        }
+
+        const inputData = {
             ...validation.data,
-            preview_image: req.file?.buffer || null
+            preview_image: newImageUrl
         };
 
         const result = await this.diagramModel.updateTemplate({
             diagramId,
-            input
+            input: inputData
         })
 
         if (!result.success) {
-            return res.status(404).json({ error: result.error })
+            if (newImagePublicId) await CloudinaryHelper.deleteImage(newImagePublicId);
+            return res.status(400).json({ error: result.error });
+        }
+
+        if (newImageUrl && oldImageUrl) {
+            const oldPublicId = CloudinaryHelper.getPublicIdFromUrl(oldImageUrl);
+            if (oldPublicId) await CloudinaryHelper.deleteImage(oldPublicId);
         }
 
         return res.status(200).json({ message: "Plantilla actualizada correctamente" })
     }
 
-    delete = async(req, res) => {
+    delete = catchAsync(async(req, res) => {
         const { diagramId } = req.params
 
         const result = await this.diagramModel.deleteTemplate({ diagramId })
@@ -128,11 +140,22 @@ export class DiagramController {
             return res.status(404).json({ error: result.error })
         }
 
-        return res.status(200).json({ message: "Plantilla eliminada correctamente" })
-    }
+        if (result.deletedImageUrl) {
+            const publicId = CloudinaryHelper.getPublicIdFromUrl(result.deletedImageUrl);
+            if (publicId) {
+                await CloudinaryHelper.deleteImage(publicId);
+            }
+        }
 
-    // Diagramas del usuario
-    getMyDiagrams = async(req, res, next) => {
+        return res.status(200).json({ message: "Plantilla eliminada correctamente" })
+    })
+
+    /* 
+    * Diagramas del usuario 
+    * 
+    */
+
+    getMyDiagrams = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
         const result = await this.diagramModel.getDiagramsByUser({ userId })
 
@@ -143,9 +166,9 @@ export class DiagramController {
         }
         
         return res.status(200).json({ diagrams: result.data })
-    }
+    })
     
-    getMyDiagramById = async(req, res, next) => {
+    getMyDiagramById = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
         const { diagramId } = req.params
         
@@ -156,9 +179,9 @@ export class DiagramController {
         }
 
         return res.status(200).json({ diagram: result.data })
-    }
+    })
 
-    softDeleteDiagram = async(req, res, next) => {
+    softDeleteDiagram = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
         const { diagramId } = req.params
 
@@ -169,9 +192,9 @@ export class DiagramController {
         }
 
         return res.status(200).json({ message: "Diagrama eliminado correctamente" })
-    }
+    })
 
-    restoreDiagram = async(req, res, next) => {
+    restoreDiagram = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
         const { diagramId } = req.params
 
@@ -185,9 +208,9 @@ export class DiagramController {
             message: "Diagrama restaurado correctamente",
             data: result.data 
         })
-    }
+    })
 
-    deleteDiagram = async(req, res, next) => {
+    deleteDiagram = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
         const { diagramId } = req.params
 
@@ -198,9 +221,9 @@ export class DiagramController {
         }
 
         return res.status(200).json({ message: "Diagrama eliminado correctamente" })
-    }
+    })
 
-    createDiagramUser = async(req, res, next) => {
+    createDiagramUser = catchAsync(async(req, res, next) => {
         const rawBody = req.body
 
         if (typeof rawBody.template_data === 'string') {
@@ -240,9 +263,9 @@ export class DiagramController {
             message: "Diagrama guardado exitosamente",
             diagramId: result.data
         })
-    }
+    })
 
-    updateDiagramUser = async(req, res, next) => {
+    updateDiagramUser = catchAsync(async(req, res, next) => {
         const rawBody = req.body
 
         if (typeof rawBody.template_data === 'string') {
@@ -283,9 +306,9 @@ export class DiagramController {
         return res.status(200).json({ 
             message: "Diagrama actualizado correctamente" 
         });
-    }
+    })
 
-    setFavoriteStatus = async(req, res, next) => {
+    setFavoriteStatus = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
         const { diagramId } = req.params
         const input = req.body
@@ -299,9 +322,9 @@ export class DiagramController {
         return res.status(200).json({ 
             message: input.is_favorite ? "Diagrama marcado como favorito" : "Diagrama removido de favoritos"
         })
-    }
+    })
     
-    getUserFavoriteDiagrams = async(req, res, next) => {
+    getUserFavoriteDiagrams = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
 
         const result = await this.diagramModel.getUserFavoriteDiagrams({ userId })
@@ -313,9 +336,9 @@ export class DiagramController {
         return res.status(200).json({
             data: result.data
         })
-    }
+    })
 
-    getUserDiagramsInTrash = async(req, res, next) => {
+    getUserDiagramsInTrash = catchAsync(async(req, res, next) => {
         const userId = req.user.userId
 
         const result = await this.diagramModel.getUserDiagramsInTrash({ userId })
@@ -327,5 +350,5 @@ export class DiagramController {
         return res.status(200).json({
             data: result.data
         })
-    }
+    })
 }

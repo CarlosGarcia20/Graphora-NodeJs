@@ -7,15 +7,7 @@ export class DiagramModel {
             `SELECT * FROM templates`
         )
 
-        // convertir imagen a base64 si existe
-        const data = rows.map(template => ({
-            ...template,
-            preview_image: template.preview_image
-                ? `data:image/png;base64,${template.preview_image.toString('base64')}`
-                : null
-        }));
-
-        return { success: true, data }
+        return { success: true, rows }
     }
 
     getTemplateById = async({ diagramId }) => {
@@ -29,22 +21,13 @@ export class DiagramModel {
             return { success: false, error: "Plantilla no encontrada" };
         }
 
-        const template = rows[0];
-
-            // Convertir imagen a base64 si existe
-        template.preview_image = template.preview_image
-            ? `data:image/png;base64,${template.preview_image.toString('base64')}`
-            : null;
-
-
-        return { success: true, data: template };
+        return { success: true, data: rows[0] };
     }
 
-    createTemplate = async({ input }) => {
-        // Validar si no hay un template creado con el mismo nombre
+    createTemplate = async({ name, description, category_id, template_data, preview_image }) => {
         const { rows: existing  } = await pool.query(
             `SELECT name FROM templates WHERE name = $1`,
-            [input.name]
+            [name]
         )
 
         if (existing.length > 0) {
@@ -61,32 +44,22 @@ export class DiagramModel {
             VALUES ($1, $2, $3, $4, $5)
             RETURNING *`,
             [
-                input.name, 
-                input.description, 
-                input.category_id,
-                input.template_data,
-                input.preview_image
+                name, 
+                description, 
+                category_id,
+                template_data,
+                preview_image
             ]
         )
 
         if (rowCount < 1) {
-            return { success: false }
+            return { success: false, error: "No se pudo insertar la plantilla" }
         }
 
         return { success: true }
     }
 
     updateTemplate = async({ diagramId, input }) => {
-        // Verificar si la plantilla existe 
-        const { rowCount: exists } = await pool.query(
-            `SELECT template_id FROM templates WHERE template_id = $1`,
-            [diagramId]
-        );
-
-        if (exists < 1) {
-            return { success: false, error: "Plantilla no encontrada" };
-        }
-
         const values = [
             input.name,
             input.description,
@@ -117,32 +90,20 @@ export class DiagramModel {
             return { success: false, error: "No se pudo actualizar la plantilla" };
         }
 
-        return { success: true };
+        return { success: true }
     }
 
-
     deleteTemplate = async({ diagramId }) => {
-        // Validar si la plantilla existe
-        const { rowCount: exists } = await pool.query(
-            `SELECT template_id FROM templates WHERE template_id = $1`,
+        const { rows, rowCount } = await pool.query(
+            `DELETE FROM templates WHERE template_id = $1 RETURNING preview_image`,
             [diagramId]
         )
 
-        if (exists < 1) {
-            return { success: false, error : "Plantilla no encontrada " }
+        if (rowCount === 0) {
+            return { success: false, error : "Plantilla no encontrada" }
         }
 
-        const { rowCount } = await pool.query(
-            `DELETE FROM templates WHERE template_id = $1`,
-            [diagramId]
-        )
-
-        if (rowCount < 1) {
-            return { success: false, error : "Ocurrió un error al eliminar la plantilla " }
-        }
-
-        
-        return { success: true }
+        return { success: true, deletedImageUrl: rows[0].preview_image }
     }
 
     // Diagramas del usuario
