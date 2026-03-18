@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node app.js",
         "dev": "node --watch app.js",
-        "dev:postgre":  "node --watch server-with-postgre.js",
+        "dev:postgre": "node --watch server-with-postgre.js",
         "test": "echo \"Error: no test specified\" && exit 1",
         "migrate": "sequelize-cli db:migrate --config app/config/config.js --migrations-path migrations",
         "migrate:undo": "sequelize-cli db:migrate:undo --config app/config/config.js --migrations-path migrations",
@@ -22,6 +22,7 @@
     },
     "dependencies": {
         "bcrypt": "5.1.1",
+        "cloudinary": "2.9.0",
         "cookie-parser": "1.4.7",
         "cors": "2.8.5",
         "dotenv": "16.4.7",
