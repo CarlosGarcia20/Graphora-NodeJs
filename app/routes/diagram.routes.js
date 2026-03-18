@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { DiagramController } from "../controllers/diagram.controller.js";
-import { verifyToken } from "../middlewares/tokenMiddleware.js";
-import upload from '../middlewares/uploads.js' 
+import { requireAuth } from "../middlewares/tokenMiddleware.js";
+import uploadMiddleware from '../middlewares/uploads.js' 
 
 export const createDiagramsRouter = ({ diagramModel }) => {
     const diagramsRouter = Router();
@@ -14,48 +14,55 @@ export const createDiagramsRouter = ({ diagramModel }) => {
     
     diagramsRouter.post(
         '/templates', 
-        upload.single('preview_image'),
+        uploadMiddleware.single('preview_image'),
         diagramController.create
     )
     
     diagramsRouter.put(
         '/templates/:diagramId', 
-        upload.single('preview_image'),
+        uploadMiddleware.single('preview_image'),
         diagramController.update
     )
     
     diagramsRouter.delete('/templates/:diagramId', diagramController.delete)
     
+    /* 
+     * TODO
+     * - Cambiar las rutas para que utilicen el nuevo middleware del token
+     * - Cambiar el agregado de imagenes para guardarlas en nube (Cloudinary)
+     * 
+    */
+
     // Rutas para los diagramas del usuario
-    diagramsRouter.get('/me', verifyToken, diagramController.getMyDiagrams)
+    // diagramsRouter.get('/me', verifyToken, diagramController.getMyDiagrams)
     
-    diagramsRouter.get('/me/favorites', verifyToken, diagramController.getUserFavoriteDiagrams)
+    // diagramsRouter.get('/me/favorites', verifyToken, diagramController.getUserFavoriteDiagrams)
     
-    diagramsRouter.get('/me/trash', verifyToken, diagramController.getUserDiagramsInTrash)
+    // diagramsRouter.get('/me/trash', verifyToken, diagramController.getUserDiagramsInTrash)
     
-    diagramsRouter.get('/me/:diagramId', verifyToken, diagramController.getMyDiagramById)
+    // diagramsRouter.get('/me/:diagramId', verifyToken, diagramController.getMyDiagramById)
     
-    diagramsRouter.post(
-        '/me', 
-        verifyToken,
-        upload.single('preview_image'), 
-        diagramController.createDiagramUser
-    )
+    // diagramsRouter.post(
+    //     '/me', 
+    //     verifyToken,
+    //     upload.single('preview_image'), 
+    //     diagramController.createDiagramUser
+    // )
     
-    diagramsRouter.put(
-        '/me/:diagramId', 
-        verifyToken, 
-        upload.single('preview_image'),
-        diagramController.updateDiagramUser
-    )
+    // diagramsRouter.put(
+    //     '/me/:diagramId', 
+    //     verifyToken, 
+    //     upload.single('preview_image'),
+    //     diagramController.updateDiagramUser
+    // )
     
-    diagramsRouter.patch('/me/delete/:diagramId', verifyToken, diagramController.softDeleteDiagram)
+    // diagramsRouter.patch('/me/delete/:diagramId', verifyToken, diagramController.softDeleteDiagram)
     
-    diagramsRouter.patch('/me/restore/:diagramId', verifyToken, diagramController.restoreDiagram)
+    // diagramsRouter.patch('/me/restore/:diagramId', verifyToken, diagramController.restoreDiagram)
     
-    diagramsRouter.patch('/me/favorite/:diagramId', verifyToken, diagramController.setFavoriteStatus)
+    // diagramsRouter.patch('/me/favorite/:diagramId', verifyToken, diagramController.setFavoriteStatus)
     
-    diagramsRouter.delete('/me/:diagramId', verifyToken, diagramController.deleteDiagram)
+    // diagramsRouter.delete('/me/:diagramId', verifyToken, diagramController.deleteDiagram)
 
     return diagramsRouter;
 }
