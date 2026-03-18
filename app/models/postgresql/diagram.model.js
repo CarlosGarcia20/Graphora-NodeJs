@@ -2,12 +2,18 @@ import pool from "../../config/db.js";
 import { DiagramStatus } from "../../constants/diagramStatus.js"
 
 export class DiagramModel {
-    getTemplates = async() => {
+    getTemplates = async({ limit, offset }) => {
+        const countResult = await pool.query(`SELECT COUNT(*) FROM templates`);
+        const totalItems = parseInt(countResult.rows[0].count, 10);
+
         const { rows } = await pool.query(
-            `SELECT * FROM templates`
+            `SELECT * FROM templates
+            ORDER BY template_id DESC
+            LIMIT $1 OFFSET $2`,
+            [limit, offset]
         )
 
-        return { success: true, rows }
+        return { success: true, data: rows, totalItems }
     }
 
     getTemplateById = async({ diagramId }) => {

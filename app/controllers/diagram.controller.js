@@ -10,13 +10,35 @@ export class DiagramController {
     }
 
     getTemplates = catchAsync(async(req, res, next) => {
-        const result = await this.diagramModel.getTemplates();
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const offset = (page - 1) * limit;
 
-        if (result.rows.length === 0) {
-            return res.status(200).json({ templates: [] });
+        const result = await this.diagramModel.getTemplates({ limit, offset });
+        const totalPages = Math.ceil(result.totalItems / limit);
+
+        if (result.data.length === 0) {
+            return res.status(200).json({ 
+                templates: [],
+                pagination: {
+                    totalItems: 0,
+                    totalPages: 0,
+                    currentPage: page,
+                    pageSize: limit
+                }
+            });
         }
+        
 
-        return res.status(200).json({ templates: result.rows });
+        return res.status(200).json({ 
+            templates: result.data,
+            pagination: {
+                totalItems: result.totalItems,
+                totalPages: totalPages,
+                currentPage: page,
+                pageSize: limit
+            }
+        });
     })
 
     getTemplateById = catchAsync(async(req, res, next) => {
