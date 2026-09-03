@@ -4,8 +4,8 @@ export const PORT = process.env.PORT || 4000;
 const config = {
     jwtSecret: process.env.JWT_SECRET,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
-    jwtExpiresIn: process.env.JWTEXPIRESIN,
-    jwtRefreshExpiresIn: process.env.JWTREFRESHEXPIRESIN,
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+    jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
     development: {
         username: process.env.DATABASE_USER,
         password: process.env.DATABASE_PASSWORD,
