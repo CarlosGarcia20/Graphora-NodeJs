@@ -1,31 +1,15 @@
 import pool from "../../config/db.js";
 
 export class UserModel {
-    createUser = async({ email, password, name, lastName }) => {
-        const { rows: user } = await pool.query(
-            `SELECT * FROM users WHERE email = $1`, 
-            [email]
-        )
-
-        if (user.length > 0) {
-            return { success: false, error: "El email ya se encuentra registrado" };
-        }
-
-        await pool.query(`
-            INSERT INTO users (
-                email, password, name, lastname
+        createUser = async ({ email, hashedPassword, name, lastname }) => {
+            const { rows } = await pool.query(
+                `INSERT INTO users (email, password, name, lastname)
+                VALUES ($1, $2, $3, $4)`,
+                [email, hashedPassword, name, lastname]
             )
-            VALUES ($1, $2, $3, $4)
-            `,
-            [
-                email,
-                password,
-                name,
-                lastName
-            ]
-        );
-
-        return { success: true };
+            
+            return rows[0];
+        }
     }
 
     getAllUsers = async() => {

@@ -1,9 +1,6 @@
 import { validateRegister } from "../schemas/register.js";
-import { catchAsync } from "../util/catchAsync.js";
-import { EncryptionHelper } from "../helpers/encryption.helper.js"
-import { validateUpdateUserProfile } from "../schemas/updateUserProfile.js";
-import { validatePasswordUpdate } from "../schemas/updatePassword.js";
-import { validateEmailUpdate } from "../schemas/updateEmail.js";
+import { validateUpdate } from "../schemas/updateUser.js"
+import { EncryptionHelper } from "../helpers/encryption.helper.js";
 
 export class UserController {
     constructor({ userModel }) {
