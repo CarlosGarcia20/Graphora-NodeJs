@@ -5,11 +5,8 @@ import { v2 as cloudinary } from 'cloudinary';
 const config = {
     jwtSecret: process.env.JWT_SECRET,
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
-    jwtExpiresIn: process.env.JWTEXPIRESIN,
-    jwtRefreshExpiresIn: process.env.JWTREFRESHEXPIRESIN,
-    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    cloudApiKey: process.env.CLOUDINARY_API_KEY,
-    cloudApiSecret: process.env.CLOUDINARY_API_SECRET,
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN,
+    jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
     development: {
         username: process.env.DATABASE_USER,
         password: process.env.DATABASE_PASSWORD,
