@@ -14,7 +14,6 @@ export class LoginController {
 
     login = catchAsync(async(req, res, next) => {
         const authValidation = validateLogin(req.body);
-        
         if (!authValidation.success) {
             return res.status(400).json({ 
                 message: "Datos incorrectos",
@@ -23,17 +22,18 @@ export class LoginController {
         }
 
         const { email, password} = authValidation.data
-
         const result = await this.loginModel.login(email);
-        if (!result.success) {
-            return res.status(401).json({ message: "Correo o contraseña incorrectos" });
-        }
+        console.log(result);
         
-        const user = result.data
+        const user = result.success ? result.data : null
+        
+        const isValidPassword = await EncryptionHelper.comparePassword(
+            password,
+            user ? user.password : config.dummyHash
+        )
 
-        const isValidPassword = await EncryptionHelper.comparePassword(password, user.password)
-        if (!isValidPassword) {
-            return res.status(401).json({ message: "Correo o contraseña incorrectos" });
+        if (!user || !isValidPassword) {
+            return res.status(401).json({ message: "Correo o contraseña incorrectos" })
         }
 
         const accessToken = tokenService.generateToken({
@@ -50,7 +50,7 @@ export class LoginController {
         await this.tokenModel.saveUserToken({
             userId: user.userid,
             token: refreshToken,
-            expiresAt: new Date(Date.now() + accessCookieMaxAge)
+            expiresAt: new Date(Date.now() + refreshCookieMaxAge)
         });
 
         res.cookie("accessToken", accessToken, {
