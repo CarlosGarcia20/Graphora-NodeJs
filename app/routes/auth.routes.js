@@ -10,7 +10,7 @@ export const createAuthRouter = ({ loginModel, tokenModel, tokenService }) => {
 
     loginRouter.post('/logout', loginController.logout)
     
-    loginRouter.get('/refresh', loginController.refreshToken)
+    loginRouter.post('/refresh', loginController.refreshToken)
 
     return loginRouter;
 }
