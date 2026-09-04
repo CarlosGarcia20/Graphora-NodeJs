@@ -26,6 +26,7 @@ export const createApp = ({ models, services }) => {
     /* 
     * TODO GENERAL
     *  - Cambiar las rutas para utilizar el nuevo middleware de los tokens
+    *  - Hacer un logoutAll para poder cerrar sesion en todos los dispositivos en los que se inicio sesion
     */
 
     app.use('/auth', createAuthRouter({ 
@@ -34,7 +35,10 @@ export const createApp = ({ models, services }) => {
         tokenService: services.tokenService 
     }))
     app.use('/users', createUserRouter({ userModel: models.userModel }))
-    app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
+    app.use('/diagram', createDiagramsRouter({ 
+        diagramModel: models.diagramModel,
+        tokenService: services.tokenService
+    }))
     1
 
     app.use((err, req, res, next) => {

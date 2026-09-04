@@ -3,8 +3,9 @@ import { DiagramController } from "../controllers/diagram.controller.js";
 import { requireAuth } from "../middlewares/tokenMiddleware.js";
 import uploadMiddleware from '../middlewares/uploads.js' 
 
-export const createDiagramsRouter = ({ diagramModel }) => {
+export const createDiagramsRouter = ({ diagramModel, tokenService }) => {
     const diagramsRouter = Router();
+    const auth = requireAuth({ tokenService })
 
     const diagramController = new DiagramController({ diagramModel })
     
