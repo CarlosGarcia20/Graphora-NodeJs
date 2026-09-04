@@ -1,16 +1,40 @@
 import { catchAsync } from "../util/catchAsync.js";
 import { validateLogin } from "../schemas/login.js";
-import { EncryptionHelper } from "../helpers/encryption.helper.js";
 import config from "../config/config.js";
 import { isProduction } from "../config/config.js";
 import ms from "ms";
+import { EncryptionHelper } from "../helpers/encryption.helper.js";
+import { validateRegister } from "../schemas/register.js";
 
-export class LoginController {
-    constructor({ loginModel, tokenModel, tokenService }) {
+export class AuthController {
+    constructor({ loginModel, tokenModel, tokenService, userModel }) {
         this.loginModel = loginModel;
         this.tokenModel = tokenModel;
         this.tokenService = tokenService;
+        this.userModel = userModel;
     }
+
+    register = catchAsync(async(req, res, next) => {
+        const registerValidation = validateRegister(req.body);
+
+        if (!registerValidation.success) {
+            return res.status(400).json({
+                message: "Datos incorrectos",
+                errors: registerValidation.error.flatten().fieldErrors
+            });
+        }
+
+        const hashedPassword = await EncryptionHelper.hashPassword(registerValidation.data.password);
+        
+        const result = await this.userModel.createUser({ 
+            email: registerValidation.data.email,
+            password: hashedPassword,
+            name: registerValidation.data.name,
+            lastname: registerValidation.data.lastname     
+        });
+
+        return res.status(201).json({ message: "Usuario creado con éxito" });
+    })
 
     login = catchAsync(async(req, res, next) => {
         const authValidation = validateLogin(req.body);
