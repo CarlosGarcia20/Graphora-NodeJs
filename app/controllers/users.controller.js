@@ -1,6 +1,7 @@
 import { validateRegister } from "../schemas/register.js";
 import { validateUpdate } from "../schemas/updateUser.js"
 import { EncryptionHelper } from "../helpers/encryption.helper.js";
+import { catchAsync } from "../util/catchAsync.js";
 
 export class UserController {
     constructor({ userModel }) {
@@ -23,12 +24,8 @@ export class UserController {
             email: registerValidation.data.email,
             password: hashedPassword,
             name: registerValidation.data.name,
-            lastName: registerValidation.data.lastName     
+            lastname: registerValidation.data.lastname     
         });
-        
-        if (!result.success) {
-            return res.status(409).json({ message: result.error });
-        }
 
         return res.status(201).json({ message: "Usuario creado con éxito" });
     })
