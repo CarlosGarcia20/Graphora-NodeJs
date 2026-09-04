@@ -31,7 +31,7 @@ export class TokenService {
       return jwt.verify(token, config.jwtSecret)
    }
 
-   static verifyRefreshToken(token) {
-        return jwt.verify(token, config.jwtRefreshSecret);
-    } 
+   verifyRefreshToken(token) {
+      return jwt.verify(token, config.jwtRefreshSecret);
+   } 
 }
