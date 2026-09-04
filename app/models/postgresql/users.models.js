@@ -1,15 +1,21 @@
 import pool from "../../config/db.js";
+import { mapPostgresError } from "./errors/postgresErrorMapper.js";
 
 export class UserModel {
+
     createUser = async ({ email, password, name, lastname }) => {
-        const { rows } = await pool.query(
-            `INSERT INTO users (email, password, name, lastname)
-            VALUES ($1, $2, $3, $4)
-            RETURNING userid`,
-            [email, password, name, lastname]
-        )
-        
-        return rows[0];
+        try {
+            const { rows } = await pool.query(
+                `INSERT INTO users (email, password, name, lastname)
+                VALUES ($1, $2, $3, $4)
+                RETURNING userid`,
+                [email, password, name, lastname]
+            )
+            
+            return rows[0];
+        } catch (error) {
+            throw mapPostgresError(error)
+        }
     }
 
     getAllUsers = async() => {
