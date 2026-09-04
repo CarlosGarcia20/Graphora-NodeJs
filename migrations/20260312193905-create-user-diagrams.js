@@ -8,8 +8,13 @@ export async function up(queryInterface, Sequelize) {
    * Example:
    * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
    */
+
+  await queryInterface.sequelize.query(`
+    CREATE TYPE enum_user_diagrams_status AS ENUM ('A', 'D', 'AR');
+  `);
+
   await queryInterface.createTable('user_diagrams', {
-    template_id: {
+    diagram_id: {
       type: Sequelize.DataTypes.BIGINT,
       allowNull: false,
       primaryKey: true,
@@ -38,14 +43,15 @@ export async function up(queryInterface, Sequelize) {
       allowNull: true
     },
     is_favorite: {
-      type: Sequelize.DataTypes.CHAR(1),
+      type: Sequelize.DataTypes.BOOLEAN,
       defaultValue: 'N'
     },
     preview_image: {
       type: Sequelize.DataTypes.TEXT
     },
     status: {
-      type: Sequelize.DataTypes.CHAR(1),
+      type: 'enum_user_diagrams_status',
+      allowNull: false,
       defaultValue: 'A'
     },
     created_at: {
@@ -66,4 +72,5 @@ export async function down(queryInterface, Sequelize) {
    * await queryInterface.dropTable('users');
   */
   await queryInterface.dropTable('user_diagrams');
+  await queryInterface.sequelize.query(`DROP TYPE enum_user_diagrams_status;`);
 }
