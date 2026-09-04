@@ -93,29 +93,47 @@ export class LoginController {
 
     refreshToken = catchAsync(async(req, res, next) => {
         const { refreshToken } = req.cookies;
-        
         if (!refreshToken) {
             return res.status(401).json({ message: "No autorizado. Inicia sesión nuevamente." });
         }
+        
+        let data
+        try {
+            data = this.tokenService.verifyRefreshToken(refreshToken);
+        } catch (error) {
+            console.error(error)
+            return res.status(401).json({ message: "Sesión expirada. Inicia sesión nuevamente." })
+        }
 
-        const data = tokenService.verifyRefreshToken(refreshToken);
-
-        const dbToken = await this.tokenModel.findToken({ token: refreshToken });
+        const dbToken = await this.tokenModel.findToken({ token: refreshToken, userId: data.userId });
         if (!dbToken.success) return res.status(403).json({ message: "Token revocado o no válido" });
 
-        const newAccessToken = tokenService.generateToken({ 
-            userId: data.userId
-            // userIdRol: data.userIdRol 
-        });
+        const newAccessToken = this.tokenService.generateToken({ userId: data.userId })
+        const newRefreshToken = this.tokenService.generateRefreshToken({ userId: data.userId })
 
         const accessCookieMaxAge = ms(config.jwtExpiresIn);
+        const refreshCookieMaxAge = ms(config.jwtRefreshExpiresIn)
+
+        await this.tokenModel.rotateToken({
+            oldToken: refreshToken,
+            newToken: newRefreshToken,
+            userId: data.userId,
+            expiresAt: new Date(Date.now() + refreshCookieMaxAge)
+        })
 
         res.cookie("accessToken", newAccessToken, {
             maxAge: accessCookieMaxAge,
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'lax'
-        });
+        })
+
+        res.cookie("refreshToken", newRefreshToken, {
+            maxAge: refreshCookieMaxAge,
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'none' : 'lax'
+        })
 
         res.json({ message: "Refrescado" });
     })
