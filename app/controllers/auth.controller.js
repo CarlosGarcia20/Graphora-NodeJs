@@ -4,9 +4,7 @@ import { EncryptionHelper } from "../helpers/encryption.helper.js";
 import { validateLogin } from "../schemas/login.js";
 import { catchAsync } from "../util/catchAsync.js";
 import { tokenService } from "../util/jwtUtils.js";
-import 'dotenv/config';
-
-const isProduction = process.env.NODE_ENV === 'production';
+import { isProduction } from "../config/config.js";
 
 export class LoginController {
     constructor({ loginModel, tokenModel }) {
