@@ -1,16 +1,18 @@
 import { Router } from "express";
-import { LoginController } from "../controllers/auth.controller.js";
+import { AuthController } from "../controllers/auth.controller.js";
 
 export const createAuthRouter = ({ loginModel, tokenModel, tokenService }) => {
-    const loginRouter = Router();
+    const authRouter = Router();
     
-    const loginController = new LoginController({ loginModel, tokenModel, tokenService })
+    const authController = new AuthController({ loginModel, tokenModel, tokenService })
     
-    loginRouter.post('/', loginController.login)
+    authRouter.post('/', authController.login)
 
-    loginRouter.post('/logout', loginController.logout)
+    authRouter.post('/logout', authController.logout)
     
-    loginRouter.post('/refresh', loginController.refreshToken)
+    authRouter.post('/refresh', authController.refreshToken)
 
-    return loginRouter;
+    authRouter.post('/register', authController.register)
+
+    return authRouter;
 }
