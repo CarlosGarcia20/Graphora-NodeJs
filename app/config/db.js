@@ -1,14 +1,14 @@
 import pkg from "pg";
+import { dbConfig } from "./config.js";
+
 const { Pool } = pkg;
-import 'dotenv/config';
 
 const pool = new Pool({
-    user: process.env.DATABASE_USER,
-    host: process.env.DATABASE_HOST,
-    database: process.env.DATABASE_NAME,
-    password: process.env.DATABASE_PASSWORD,
-    port: process.env.DATABASE_PORT
+    host: dbConfig.host,
+    port: dbConfig.port,
+    database: dbConfig.database,
+    user: dbConfig.username,
+    password: dbConfig.password,
 });
 
 export default pool;
-
