@@ -7,8 +7,6 @@ export const createUserRouter = ({ userModel }) => {
 
     const userController = new UserController({ userModel })
     
-    usersRouter.post('/', userController.create);
-    
     // usersRouter.get('/', verifyToken ,userController.getUsers);
     usersRouter.get('/', userController.getUsers);
     

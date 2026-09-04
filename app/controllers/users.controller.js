@@ -7,28 +7,6 @@ export class UserController {
     constructor({ userModel }) {
         this.userModel = userModel
     }
-    
-    create = catchAsync(async(req, res, next) => {
-        const registerValidation = validateRegister(req.body);
-
-        if (!registerValidation.success) {
-            return res.status(400).json({
-                message: "Datos incorrectos",
-                errors: registerValidation.error.flatten().fieldErrors
-            });
-        }
-
-        const hashedPassword = await EncryptionHelper.hashPassword(registerValidation.data.password);
-        
-        const result = await this.userModel.createUser({ 
-            email: registerValidation.data.email,
-            password: hashedPassword,
-            name: registerValidation.data.name,
-            lastname: registerValidation.data.lastname     
-        });
-
-        return res.status(201).json({ message: "Usuario creado con éxito" });
-    })
 
     getUsers = catchAsync(async(req, res, next) => {
         const result = await this.userModel.getAllUsers();
