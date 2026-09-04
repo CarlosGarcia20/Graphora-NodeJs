@@ -1,5 +1,6 @@
 # App
 PORT=3000
+NODE_ENV=development
 
 # Auth / JWT
 JWT_SECRET=your_jwt_secret_key_here
