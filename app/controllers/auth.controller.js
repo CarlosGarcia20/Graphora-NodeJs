@@ -1,15 +1,15 @@
-import ms from "ms";
-import config from "../config/config.js";
-import { EncryptionHelper } from "../helpers/encryption.helper.js";
-import { validateLogin } from "../schemas/login.js";
 import { catchAsync } from "../util/catchAsync.js";
-import { tokenService } from "../util/jwtUtils.js";
+import { validateLogin } from "../schemas/login.js";
+import { EncryptionHelper } from "../helpers/encryption.helper.js";
+import config from "../config/config.js";
 import { isProduction } from "../config/config.js";
+import ms from "ms";
 
 export class LoginController {
-    constructor({ loginModel, tokenModel }) {
+    constructor({ loginModel, tokenModel, tokenService }) {
         this.loginModel = loginModel;
         this.tokenModel = tokenModel;
+        this.tokenService = tokenService;
     }
 
     login = catchAsync(async(req, res, next) => {
@@ -23,7 +23,6 @@ export class LoginController {
 
         const { email, password} = authValidation.data
         const result = await this.loginModel.login(email);
-        console.log(result);
         
         const user = result.success ? result.data : null
         
@@ -36,13 +35,8 @@ export class LoginController {
             return res.status(401).json({ message: "Correo o contraseña incorrectos" })
         }
 
-        const accessToken = tokenService.generateToken({
-            userId: user.userid
-        })
-
-        const refreshToken = tokenService.generateRefreshToken({
-            userId: user.userid
-        })
+        const accessToken = this.tokenService.generateToken({ userId: user.userid })
+        const refreshToken = this.tokenService.generateRefreshToken({ userId: user.userid })
 
         const accessCookieMaxAge = ms(config.jwtExpiresIn);
         const refreshCookieMaxAge = ms(config.jwtRefreshExpiresIn);

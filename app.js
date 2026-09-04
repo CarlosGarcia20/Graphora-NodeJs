@@ -13,7 +13,7 @@ import { createDiagramsRouter } from './app/routes/diagram.routes.js'
 import { corsMiddleware } from './app/middlewares/cors.js'
 import cookieParser from 'cookie-parser'
 
-export const createApp = ({ models }) => {
+export const createApp = ({ models, services }) => {
     const app = express()
     
     app.use(morgan('dev'))
@@ -28,9 +28,14 @@ export const createApp = ({ models }) => {
     *  - Cambiar las rutas para utilizar el nuevo middleware de los tokens
     */
 
-    app.use('/auth', createAuthRouter({ loginModel: models.loginModel, tokenModel: models.tokenModel }))
+    app.use('/auth', createAuthRouter({ 
+        loginModel: models.loginModel, 
+        tokenModel: models.tokenModel,
+        tokenService: services.tokenService 
+    }))
     app.use('/users', createUserRouter({ userModel: models.userModel }))
     app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
+    1
 
     app.use((err, req, res, next) => {
         err.statusCode = err.statusCode || 500;

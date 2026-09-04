@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { LoginController } from "../controllers/auth.controller.js";
 
-export const createAuthRouter = ({ loginModel, tokenModel }) => {
+export const createAuthRouter = ({ loginModel, tokenModel, tokenService }) => {
     const loginRouter = Router();
     
-    const loginController = new LoginController({ loginModel, tokenModel })
+    const loginController = new LoginController({ loginModel, tokenModel, tokenService })
     
     loginRouter.post('/', loginController.login)
 
