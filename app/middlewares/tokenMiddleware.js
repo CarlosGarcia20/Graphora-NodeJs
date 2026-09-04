@@ -1,17 +1,17 @@
-import jwt from 'jsonwebtoken';
-import config from '../config/config.js';
+export const requireAuth = ({ tokenService }) => {
+    return (req, res, next) => {
+        const token = req.cookies.accessToken;
 
-export const requireAuth = (req, res, next) => {
-    const token = req.cookies.accessToken;
+        if (!token) {
+            return res.status(401).json({ message: "No autorizado" });
+        }
 
-    if (!token) {
-        return res.status(401).json({ message: "No autorizado" });
+        try {
+            const user = tokenService.verifyToken(token)
+            req.user = user
+            next();            
+        } catch (error) {
+            return res.status(503).json({ message: "Token expirado o inválido" })
+        }
     }
-
-    jwt.verify(token, config.jwtSecret, (err, user) => {
-        if (err) return res.status(403).json({ message: "Token expirado" });
-        
-        req.user = user;
-        next();
-    });
 };
