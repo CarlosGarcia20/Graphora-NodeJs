@@ -10,6 +10,7 @@ const config = {
     jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN,
     jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN,
+    dummyHash: '$2b$10$a7pi7KltoQ0KJD/l1E73b.wuSLWiMPLwY7IuzJl4rijVuOzbr2NKq',
 
     development: {
         username: process.env.DATABASE_USER,
