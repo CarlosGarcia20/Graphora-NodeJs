@@ -2,7 +2,7 @@ import express from 'express'
 import morgan from 'morgan'
 
 // Archivos de configuracion
-import { PORT } from './app/config/config.js'
+import { isDevelopment, PORT } from './app/config/config.js'
 
 //Rutas 
 import { createUserRouter } from './app/routes/user.routes.js'
@@ -33,12 +33,24 @@ export const createApp = ({ models }) => {
     app.use('/diagram', createDiagramsRouter({ diagramModel: models.diagramModel }))
 
     app.use((err, req, res, next) => {
-        console.error("Error detectado:", err);
-        
-        res.status(500).json({ 
-            message: "Internal Server Error", 
-            // error: err.message 
-        });
+        err.statusCode = err.statusCode || 500;
+
+        if (err.isOperational) {
+            return res.status(err.statusCode).json({
+                message: err.message
+            });
+        }
+
+        console.error('ERROR NO CONTROLADO: ', err)
+
+        if (isDevelopment) {
+            return res.status(err.statusCode).json({
+                message: err.message,
+                stack: err.stack
+            })
+        }
+
+        res.status(500).json({ message: "Internal Server Error" });
     });
     
     app.listen(PORT, () => {
