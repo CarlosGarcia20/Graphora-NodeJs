@@ -1,6 +1,6 @@
 import pool from "../../config/db.js";
 
-export class tokenModel {
+export class TokenModel {
     saveUserToken = async({ userId, token, expiresAt }) => {
         await pool.query(
             `
