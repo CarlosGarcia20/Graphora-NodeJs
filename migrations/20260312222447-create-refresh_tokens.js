@@ -24,7 +24,7 @@ export async function up(queryInterface, Sequelize) {
       onDelete: 'RESTRICT',
       onUpdate: 'CASCADE'
     },
-    expiresat: {
+    expires_at: {
       type: Sequelize.DataTypes.DATE,
       allowNull: false
     }
