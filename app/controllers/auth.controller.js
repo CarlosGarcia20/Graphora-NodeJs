@@ -70,24 +70,21 @@ export class LoginController {
         });
     })
 
-    logout = catchAsync(async(req, res, next) => {
+    logout = catchAsync(async (req, res, next) => {
         const refreshToken = req.cookies?.refreshToken;
-
-        if (!refreshToken) {
-            return res.status(200).json({ message: "Sesión cerrada" });
-        }
-        
-        await this.tokenModel.revokeToken({ token: refreshToken });
-
         const cookieOptions = {
             httpOnly: true,
             secure: isProduction,
             sameSite: isProduction ? 'none' : 'lax',
         };
 
+        if (refreshToken) {
+            await this.tokenModel.revokeToken({ token: refreshToken });
+        }
+
         res.clearCookie('accessToken', cookieOptions);
         res.clearCookie('refreshToken', cookieOptions);
-        
+
         return res.status(200).json({ message: "Sesión cerrada exitosamente" });
     })
 
