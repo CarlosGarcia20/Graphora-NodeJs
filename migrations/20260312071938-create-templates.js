@@ -19,6 +19,10 @@ export async function up(queryInterface, Sequelize) {
       type: Sequelize.DataTypes.STRING,
       allowNull: false
     },
+    description: {
+      type: Sequelize.DataTypes.TEXT,
+      allowNull: true
+    },
     category_id: {
       type: Sequelize.DataTypes.BIGINT,
       allowNull: false,
